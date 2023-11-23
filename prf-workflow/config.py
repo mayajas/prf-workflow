@@ -17,7 +17,7 @@ class ProjectConfig:
         hem_list (list): list of all hemispheres to be analyzed in the project
     """
     # project name
-    proj_id                 = 'project-00-7t-pipeline-dev'
+    proj_id                 = 'example-project'
 
     # subjects and hemispheres
     subject_list            = ['sub-01','sub-02','sub-03','sub-04']
@@ -41,7 +41,7 @@ class DirConfig:
         self.subject_id     = project_config.subject_id
         self.logger         = logger
 
-        self.proj_dir, self.home_dir, self.programs_dir, self.prf_input_dir, self.FS_dir, self.apertures_dir, self.surface_tools_dir, self.conda_python_path, self.conda_site_packages, self.working_dir = self._get_project_dirs()
+        self.proj_dir, self.home_dir, self.programs_dir, self.prf_input_dir, self.FS_dir, self.apertures_dir, self.surface_tools_dir, self.working_dir = self._get_project_dirs()
     
     def _get_project_dirs(self):
         # project, home and programs directories
@@ -49,14 +49,10 @@ class DirConfig:
             proj_dir                = '/home/mayajas/scratch/'+self.proj_id+'/'
             home_dir                = '/home/mayajas/Documents/'+self.proj_id+'/'
             programs_dir            = '/home/mayajas/Documents/programs/'
-            conda_python_path       = None
-            conda_site_packages     = None
         else:
             proj_dir                = '/scratch/mayaaj90/'+self.proj_id+'/'
             home_dir                = '/home/mayaaj90/projects/'+self.proj_id+'/'
             programs_dir            = '/home/mayaaj90/programs/'
-            conda_python_path       = '/home/mayaaj90/anaconda3/envs/py38prf/bin/'
-            conda_site_packages     = '/home/mayaaj90/anaconda3/envs/py38prf/lib/python3.8/site-packages'
         self.logger.info(f"proj_dir: {proj_dir}")
         self.logger.info(f"home_dir: {home_dir}")
         self.logger.info(f"programs_dir: {programs_dir}")
@@ -66,12 +62,8 @@ class DirConfig:
         self.logger.info(f"prf_input_dir: {prf_input_dir}")
 
         # freesurfer directory
-        if self.subject_id == 'sub-04': ## TODO: make this generalizable!
-            FS_dir          = opj(proj_dir,'derivatives','wf_advanced_skullstrip_sub-04',
-                            '_subject_id_'+self.subject_id,'autorecon_pial')
-        else:
-            FS_dir          = opj(proj_dir,'derivatives','wf_advanced_skullstrip',
-                            '_subject_id_'+self.subject_id,'autorecon_pial')
+        FS_dir          = opj(proj_dir,'derivatives','wf_advanced_skullstrip',
+                        '_subject_id_'+self.subject_id,'autorecon_pial')
         self.logger.info(f"FS_dir: {FS_dir}")
             
         # path to stimulus apertures mat files
@@ -87,8 +79,7 @@ class DirConfig:
         if os.getcwd() != working_dir:
             os.chdir(working_dir)
 
-            
-        return proj_dir, home_dir, programs_dir, prf_input_dir, FS_dir, apertures_dir, surface_tools_dir, conda_python_path, conda_site_packages, working_dir
+        return proj_dir, home_dir, programs_dir, prf_input_dir, FS_dir, apertures_dir, surface_tools_dir, working_dir
 
 class PrfMappingConfig:
     """
