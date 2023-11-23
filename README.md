@@ -16,7 +16,7 @@ The package then carries out the following steps:
         - detrending
         - standardizing
         - bandpass filtering  
-        - removing confounds (e.g., )
+        - removing confounds (e.g., motion regressor from realignment of functional runs)
 - PRF mapping [prfpy_interface.py]
     This is the main part of the package and acts as a wrapper to the [pRFpy](https://github.com/VU-Cog-Sci/prfpy/tree/main) package from the Spinoza Centre for Neuroimaging, Amsterdam
     - creating a stimulus object for prfpy
