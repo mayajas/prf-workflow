@@ -1,5 +1,5 @@
 ## prf-workflow 
-*is a package that contains a full cortical surface-based population receptive field (pRF) modelling pipeline. Notably, the package can be used on high-resolution data for multi-surface pRF mapping. The package is equally well suited to standard single-surface pRF mapping.*
+*a package that contains a full cortical surface-based population receptive field (pRF) modeling pipeline. Notably, the package can be used on high-resolution data for multi-surface pRF mapping. The package is equally well suited to standard single-surface pRF mapping.*
 
 As inputs, the package requires the preprocessed pRF run data (coregistered to the anatomical data), Freesurfer outputs and the stimulus apertures that were used for pRF stimulus presentation.
 
