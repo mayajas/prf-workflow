@@ -1,0 +1,60 @@
+{
+    "ProjectConfig": {
+        "subject_list": ["sub-01", "sub-02", "sub-03"],
+        "hem_list": ["lh", "rh"],
+        "n_surfs": 1
+    },
+    "DirConfig": {
+        "prf_input_dir": "/scratch/mayaaj90/project-00-7t-pipeline-dev/output/prfpy_surf_prepped_inputs/{subject_id}",
+        "FS_dir": "/scratch/mayaaj90/project-00-7t-pipeline-dev/derivatives/wf_advanced_skullstrip/_subject_id_{subject_id}/autorecon_pial",
+        "prf_output_dir": "/scratch/mayaaj90/project-00-7t-pipeline-dev/output",
+        "apertures_dir": "/home/mayaaj90/projects/project-00-7t-pipeline-dev/code/stim-scripts/apertures",
+        "surface_tools_dir": "/home/mayaaj90/programs/surface_tools/equivolumetric_surfaces"
+    },
+    "PrfMappingConfig": { 
+        "screen_height_cm": 12.00,
+        "screen_distance_cm": 52.0,
+        "which_model": "DoG",
+        "avg_runs": true,
+        "fit_hrf": false,
+        "start_from_avg": true,
+        "fit_css": false,
+        "grid_nr": 30,
+        "y_coord_cutoff": -25,
+        "verbose": true,
+        "hrf": null,
+        "filter_predictions": false,
+        "filter_type": "sg",
+        "filter_params": {
+            "window_length": 201,
+            "polyorder": 3
+        },
+        "normalize_RFs": false,
+        "rsq_thresh_itfit": 0.0005,
+        "rsq_thresh_viz": 0.2
+    },
+    "MriConfig": {
+        "TR": 3.0,
+        "equivol_fn": "equi",
+        "meanFunc_nii_fn": "mean_func.nii",
+        "T1_nii_fn": "T1.nii",
+        "prf_run_config": {
+            "bar": {
+                "n_runs": 2,
+                "ap_fn": "stimulus_bar.mat",
+                "fn_prefix": "reg_bar",
+                "nii_fn_list": [],
+                "mgh_fn_list": []
+            }
+        }
+    },
+    "DataCleanConfig":  {
+        "detrend": true,
+        "standardize": "zscore",
+        "high_pass": 0.01,
+        "low_pass": 0.1,
+        "filter": "butterworth",
+        "confounds": null
+    }
+  }
+  

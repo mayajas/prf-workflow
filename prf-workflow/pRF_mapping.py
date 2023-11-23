@@ -83,6 +83,7 @@ if __name__ == "__main__":
     
     ### Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run pRF mapping analysis on Freesurfer surfaces.")
+    parser.add_argument("config", type=str, help="Path to the configuration file, which contains the image processing and pRF analysis parameters.")
     parser.add_argument("sub_idx", type=int, help="Index of the subject to analyze.")
     parser.add_argument("hem_idx", type=int, choices=[0,1], help="Hemisphere to run the analysis on. This is the index of the current hemisphere from the hemisphere list: ['lh','rh']")
     parser.add_argument("--run_locally", action='store_true', help="Flag indicating whether the script is being run locally or on Curta")

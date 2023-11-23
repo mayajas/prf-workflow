@@ -9,6 +9,9 @@ import pickle
 import subprocess
 import sys
 
+def is_running_on_slurm():
+    return "SLURM_JOB_ID" in os.environ
+
 class EquivolumetricSurfaces:
     """
     This class contains functions that are used to generate equivolumetric surfaces.
@@ -82,7 +85,10 @@ class EquivolumetricSurfaces:
         env = os.environ.copy()
 
         # if running on CURTA, add conda environment to path (otherwise, the nibabel package isn't found within the subprocess)
-        if not self.run_locally:
+        if is_running_on_slurm():
+            conda_python_path = os.path.join(sys.prefix, 'bin')
+            conda_site_packages = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3], 'site-packages')
+
             command = [conda_python_path+command[0]]+command[1:]
             env['PYTHONPATH'] = conda_site_packages
 

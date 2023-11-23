@@ -1,11 +1,21 @@
 # config.py
 
+import json
+import math
+import numpy as np
 import os
 from os.path import join as opj
 import scipy
-import math
-import numpy as np
-import logging
+
+
+def replace_placeholders(config, replacements):
+    if isinstance(config, dict):
+        for key, value in config.items():
+            config[key] = replace_placeholders(value, replacements)
+    elif isinstance(config, str):
+        for placeholder, replacement in replacements.items():
+            config = config.replace("{" + placeholder + "}", str(replacement))
+    return config
 
 class ProjectConfig:
     """
@@ -16,134 +26,78 @@ class ProjectConfig:
         subject_list (list): list of all subjects in the project
         hem_list (list): list of all hemispheres to be analyzed in the project
     """
-    # project name
-    proj_id                 = 'example-project'
-
-    # subjects and hemispheres
-    subject_list            = ['sub-01','sub-02','sub-03','sub-04']
-    hem_list                = ['lh','rh']
-
-    n_surfs         = 6         # number of equivolumetric surfaces to use (including pial and white)
-                                # if n_surfs = 1, then analysis is run on pial surface only
-
-    def __init__(self, sub_idx, hem_idx, run_locally):
-        self.subject_id      = self.subject_list[sub_idx]
-        self.hemi            = self.hem_list[hem_idx]
-        self.run_locally     = run_locally
+    
+    def __init__(self, config_file, sub_idx, hem_idx):
+        self.load_config(config_file)
+        
+        self.subject_id = self.subject_list[sub_idx]
+        self.hemi = self.hem_list[hem_idx]
 
         # Determine the number of cores
-        self.n_procs = 1 if run_locally else int(os.getenv('OMP_NUM_THREADS'))
+        try:
+            self.n_procs = int(os.getenv('OMP_NUM_THREADS'))
+        except TypeError:
+            self.n_procs = 1 
+
+    def load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+        self.subject_list = class_section.get('subject_list', ['sub-01', 'sub-02', 'sub-03'])
+        self.hem_list = class_section.get('hem_list', ['lh', 'rh'])
+        self.n_surfs = class_section.get('n_surfs', 1)
+
 
 class DirConfig:
-    def __init__(self, project_config, logger):
-        self.run_locally    = project_config.run_locally
-        self.proj_id        = project_config.proj_id
+    def __init__(self, config_file, project_config, logger):
+        self.load_config(config_file)
+
         self.subject_id     = project_config.subject_id
         self.logger         = logger
 
-        self.proj_dir, self.home_dir, self.programs_dir, self.prf_input_dir, self.FS_dir, self.apertures_dir, self.surface_tools_dir, self.working_dir = self._get_project_dirs()
-    
-    def _get_project_dirs(self):
-        # project, home and programs directories
-        if self.run_locally:
-            proj_dir                = '/home/mayajas/scratch/'+self.proj_id+'/'
-            home_dir                = '/home/mayajas/Documents/'+self.proj_id+'/'
-            programs_dir            = '/home/mayajas/Documents/programs/'
-        else:
-            proj_dir                = '/scratch/mayaaj90/'+self.proj_id+'/'
-            home_dir                = '/home/mayaaj90/projects/'+self.proj_id+'/'
-            programs_dir            = '/home/mayaaj90/programs/'
-        self.logger.info(f"proj_dir: {proj_dir}")
-        self.logger.info(f"home_dir: {home_dir}")
-        self.logger.info(f"programs_dir: {programs_dir}")
+    def load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+        # Replace placeholders in the configuration data
+        replacements = {"subject_id": self.subject_id}
+        class_section = replace_placeholders(class_section, replacements)
 
         # prepped input directory
-        prf_input_dir = opj(proj_dir,'output','prfpy_surf_prepped_inputs',self.subject_id)
-        self.logger.info(f"prf_input_dir: {prf_input_dir}")
-
+        self.prf_input_dir = class_section.get('prf_input_dir', opj("/scratch/mayaaj90/project-00-7t-pipeline-dev/output/prfpy_surf_prepped_inputs",self.subject_id))
+        
         # freesurfer directory
-        FS_dir          = opj(proj_dir,'derivatives','wf_advanced_skullstrip',
-                        '_subject_id_'+self.subject_id,'autorecon_pial')
-        self.logger.info(f"FS_dir: {FS_dir}")
-            
+        self.FS_dir = class_section.get('FS_dir', opj("/scratch/mayaaj90/project-00-7t-pipeline-dev/output/wf_advanced_skullstrip/_subject_id_"+self.subject_id+"/autorecon_pial"))
+        
+        # output directory
+        self.prf_output_dir = class_section.get('prf_output_dir', "/scratch/mayaaj90/project-00-7t-pipeline-dev/output")
+        
         # path to stimulus apertures mat files
-        apertures_dir = opj(home_dir,'code','stim-scripts','apertures')
-        self.logger.info(f"apertures_dir: {apertures_dir}")
-            
+        self.apertures_dir = class_section.get('apertures_dir', "/home/mayaaj90/projects/project-00-7t-pipeline-dev/code/stim-scripts/apertures")
+        
         # path to surface tools 
-        surface_tools_dir   = opj(programs_dir,'surface_tools','equivolumetric_surfaces')
-        self.logger.info(f"surface_tools_dir: {surface_tools_dir}")
-
-        ## Change working directory if needed
-        working_dir = opj(home_dir, 'code', 'analysis-scripts', 'python')
-        if os.getcwd() != working_dir:
-            os.chdir(working_dir)
-
-        return proj_dir, home_dir, programs_dir, prf_input_dir, FS_dir, apertures_dir, surface_tools_dir, working_dir
+        self.surface_tools_dir = class_section.get('surface_tools_dir', "/home/mayaaj90/programs/surface_tools/equivolumetric_surfaces")
 
 class PrfMappingConfig:
     """
     This class contains pRF mapping-related information.
     """
-    # pRF mapping stimulus dimensions
-    screen_height_cm        = 12.00                     # full screen height (cm)
-    screen_halfheight_cm    = screen_height_cm/2        # half screen size (cm)
-    screen_distance_cm      = 52.0                      # distance from screen (cm)
-    max_ecc                 = math.atan(screen_halfheight_cm/screen_distance_cm)
-    max_ecc_deg             = math.degrees(max_ecc)
-    max_ecc_size            = round(max_ecc_deg,2)
-    
-    # pRF model preferences
-    which_model     = 'DoG'     # 'Iso' or 'DoG'
-    avg_runs        = True      # boolean
-                                # whether or not to average runs of the same aperture type
-                                # if False, then runs are concatenated
-    fit_hrf         = False     # boolean
-                                # whether or not to fit two extra parameters for hrf derivative and
-                                # dispersion.
-    start_from_avg  = True      # boolean
-                                # whether to use avg across depths as starting point for layer fits
-                                # when not fitting layer-specific prfs, this parameter is meaningless
-                                # as prf runs are projected to the gm surface and fitting is done there (only once)
-    fit_css         = False     # boolean
-                                # TODO: add description
+    def __init__(self, config_file, dir_config, project_config, logger):
+        self.load_config(config_file)
 
-    # size of grid for pRF mapping initial grid search
-    grid_nr         = 30
-
-    # occipital mask y-coordinate cut-off (including only posterior vertices)
-    y_coord_cutoff  = -25       # careful when choosing this - use inflated surface on CURTA in jupyter notebook to check
-
-    # Input parameters of Iso2DGaussianModel
-    verbose             = True
-    hrf                 = None  # string, list or numpy.ndarray, optional
-                                # HRF shape for this Model.
-                                # Can be 'direct', which implements nothing (for eCoG or later convolution),
-                                # a list or array of 3, which are multiplied with the three spm HRF basis functions,
-                                # and an array already sampled on the TR by the user.
-                                # (the default is None, which implements standard spm HRF)
-    filter_predictions  = False # boolean, optional
-                                # whether to high-pass filter the predictions, default False
-    filter_type         = 'sg'
-
-    sg_filter_window_length = 201
-    sg_filter_polyorder     = 3
-
-    filter_params           = {'window_length':sg_filter_window_length, 
-                                'polyorder':sg_filter_polyorder}
-    normalize_RFs           = False    # whether or not to normalize the RF volumes (generally not needed).
-
-    # Input parameters for iterative fit
-    rsq_thresh_itfit    = 0.0005      # float, Rsq threshold for iterative fitting. Must be between 0 and 1.
-
-    rsq_thresh_viz      = 0.2         # float, Rsq threshold for visualization. Must be between 0 and 1.
-
-    def __init__(self, dir_config, project_config, logger):
         self.proj_dir   = dir_config.proj_dir
         self.subject_id = project_config.subject_id
         self.hemi       = project_config.hemi
         self.n_surfs    = project_config.n_surfs
         self.logger     = logger
+
+        self._get_screen_dimensions()
 
         # get grid search parameters
         self.size_grid, self.ecc_grid, self.polar_grid, self.surround_amplitude_grid, self.surround_size_grid = self._get_grid_search_params()
@@ -154,6 +108,75 @@ class PrfMappingConfig:
         # initialize prf output filenames
         self.input_data_dict_fn, self.output_data_dict_fn, self.pRF_param_avg_fn, self.x_map_mgh, self.y_map_mgh, self.prf_size_map_mgh, self.prf_amp_map_mgh, self.bold_baseline_map_mgh, self.srf_amp_map_mgh, self.srf_size_map_mgh, self.hrf_1_map_mgh, self.hrf_2_map_mgh, self.rsq_map_mgh, self.polar_map_mgh, self.ecc_map_mgh, self.pRF_param_per_depth_fn, self.polar_map_per_depth_mgh, self.ecc_map_per_depth_mgh, self.hrf_1_map_per_depth_mgh, self.hrf_2_map_per_depth_mgh = self._get_prf_output_fns()
          
+    def load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+        # full screen height (cm)
+        self.screen_height_cm = class_section.get('screen_height_cm', 12.00)
+
+        # distance from screen (cm)
+        self.screen_distance_cm = class_section.get('screen_distance_cm', 12.00)
+
+        # pRF model preferences
+        self.which_model    = class_section.get('which_model', 'Iso')   # 'Iso' or 'DoG'
+        self.avg_runs       = class_section.get('avg_runs', True)       # boolean
+                                                                        # whether or not to average runs of the same aperture type
+                                                                        # if False, then runs are concatenated TODO: implement this option
+        self.fit_hrf        = class_section.get('fit_hrf', False)       # boolean
+                                                                        # whether or not to fit two extra parameters for hrf derivative and
+                                                                        # dispersion.
+        self.start_from_avg = class_section.get('start_from_avg', True) # boolean
+                                                                        # whether to use avg across depths as starting point for layer fits
+                                                                        # when not fitting layer-specific prfs, this parameter is meaningless
+                                                                        # as prf runs are projected to the gm surface and fitting is done there (only once)
+        self.fit_css        = class_section.get('fit_css', False)       # boolean
+                                                                        # whether or not to fit css model
+
+
+        # size of grid for pRF mapping initial grid search
+        self.grid_nr        = class_section.get('grid_nr', 30)
+        
+        # occipital mask y-coordinate cut-off (including only posterior vertices)
+        self.y_coord_cutoff = class_section.get('y_coord_cutoff', -25)  # careful when choosing this - use inflated surface on CURTA in jupyter notebook to check
+
+        # Input parameters of Iso2DGaussianModel
+        self.verbose = class_section.get('verbose', True)               # boolean, optional
+                                                                        # whether to print out progress messages            
+        self.hrf = class_section.get('hrf', None)                       # string, list or numpy.ndarray, optional
+                                                                        # HRF shape for this Model.
+                                                                        # Can be 'direct', which implements nothing (for eCoG or later convolution),
+                                                                        # a list or array of 3, which are multiplied with the three spm HRF basis functions,
+                                                                        # and an array already sampled on the TR by the user.
+                                                                        # (the default is None, which implements standard spm HRF)
+        self.filter_predictions = class_section.get('filter_predictions', False) # boolean, optional
+                                                                                # whether to high-pass filter the predictions, default False        
+        self.filter_type = class_section.get('filter_type', 'sg')         # string
+                                                                        # type of filter to use for high-pass filtering
+                                                                        # options: 'sg' (Savitzky-Golay) or 'butterworth'   
+        sg_filter_window_length = 201
+        sg_filter_polyorder     = 3        
+        self.filter_params = class_section.get('filter_params', {'window_length':sg_filter_window_length, 
+                                                                 'polyorder':sg_filter_polyorder}) # dict
+        self.normalize_RFs = class_section.get('normalize_RFs', False)   # boolean, optional
+                                                                        # whether to normalize the RF volumes (generally not needed).                               
+
+        # Input parameters for iterative fit
+        self.rsq_thresh_itfit = class_section.get('rsq_thresh_itfit', 0.0005) # float
+                                                                                # Rsq threshold for iterative fitting. Must be between 0 and 1.         
+        self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.2)         # float
+                                                                                # Rsq threshold for visualization. Must be between 0 and 1.                                                               
+
+    def _get_screen_dimensions(self):
+        # pRF mapping stimulus dimensions
+        self.screen_halfheight_cm = self.screen_height_cm/2
+        self.max_ecc                 = math.atan(self.screen_halfheight_cm/self.screen_distance_cm)
+        self.max_ecc_deg             = math.degrees(self.max_ecc)
+        self.max_ecc_size            = round(self.max_ecc_deg,2)
+    
    
     def _get_grid_search_params(self):
         # grid search parameters
@@ -243,28 +266,10 @@ class MriConfig:
     """
     This class contains MRI acquisition-related information.
     """
-    TR              = 3.0           # repetition time (s)
-    equivol_fn      = 'equi'        # equivolumetric surface filename prefix
 
-    prf_run_config  = {
-        'bar': {
-            'n_runs': 2,
-            'ap_fn': 'stimulus_bar.mat',
-            'fn_prefix': 'reg_bar',
-            'nii_fn_list': [],
-            'mgh_fn_list': []
-        }#,
-        # 'wedge': {
-        #     'n_runs': 2,
-        #     'ap_fn': 'stimulus_wedge.mat',
-        #     'fn_prefix': 'reg_wedge',
-        #     'nii_fn_list': [],
-        #     'mgh_fn_list': []
+    def __init__(self, config_file, project_config, dir_config, prf_config, logger):
+        self.load_config(config_file)
 
-        # }
-    }
-
-    def __init__(self, project_config, dir_config, prf_config, logger):
         self.prf_input_dir  = dir_config.prf_input_dir
         self.prf_output_dir = prf_config.out_dir
         self.FS_dir         = dir_config.FS_dir
@@ -274,18 +279,34 @@ class MriConfig:
         self.logger         = logger
 
         # get input mri filenames
-        self.meanFunc_nii_fn, self.T1_nii_fn, self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
+        self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
 
         # get info about pRF runs (apertures, nr sessions per run, filenames of projected runs)
         self.prf_run_config, self.prfpy_output_config = self._get_prf_run_list()
+
+
+    def load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+        self.TR = class_section.get('TR', 3.0)
+        self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
+        self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', opj(self.prf_input_dir,'reg_meanFunc.nii')) # mean functional nitfti filepath and name
+        self.T1_nii_fn = class_section.get('T1_nii_fn', opj(self.prf_input_dir,'T1_out.nii')) # T1 nifti filepath and name
+        self.prf_run_config  = class_section.get('prf_run_config',  {
+                                                                    'bar': {
+                                                                        'n_runs': 2,
+                                                                        'ap_fn': 'stimulus_bar.mat',
+                                                                        'fn_prefix': 'reg_bar',
+                                                                        'nii_fn_list': [],
+                                                                        'mgh_fn_list': []
+                                                                        }
+                                                                    })
     
     def _get_mri_fns(self):
-        # mean functional
-        meanFunc_nii_fn     = opj(self.prf_input_dir,'reg_meanFunc.nii')
-
-        # anatomical image
-        T1_nii_fn           = opj(self.prf_input_dir,'T1_out.nii')
-
         # Freesurfer mesh filenames
         gm_surf_fn          = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.pial')
         wm_surf_fn          = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.white')
@@ -306,7 +327,7 @@ class MriConfig:
         # occipital mask filename
         occ_mask_fn             = opj(self.prf_output_dir,self.hemi+'_occ_mask.pckl')
 
-        return meanFunc_nii_fn, T1_nii_fn, gm_surf_fn, wm_surf_fn, inflated_surf_fn, equi_surf_fn_list, meanFunc_mgh_fn, occ_mask_fn
+        return gm_surf_fn, wm_surf_fn, inflated_surf_fn, equi_surf_fn_list, meanFunc_mgh_fn, occ_mask_fn
     
     def _get_prf_run_list(self):
         for aperture_type, config in self.prf_run_config.items():
@@ -401,17 +422,25 @@ class DataCleanConfig:
         TR (float): repetition time (s)
         confounds (str): confound regressors to be included in the model
     """
-   
-    detrend     = True
-    standardize = 'zscore'
-    low_pass    = 0.1           # Low pass filters out high frequency signals from our data: 
-                                # fMRI signals are slow evolving processes, any high frequency signals 
-                                # are likely due to noise 
-    high_pass   = 0.01          # High pass filters out any very low frequency signals (below 0.01Hz), 
-                                # which may be due to intrinsic scanner instabilities
-    
-    filter      ='butterworth'  # 'butterworth' 
-    confounds   = None          # could add motion regressors here
 
-    def __init__(self, mri_config):
+    def __init__(self, config_file, mri_config):
+        self.load_config(config_file)
+
         self.TR = mri_config.TR
+
+    def load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+        self.detrend = class_section.get('detrend', True)
+        self.standardize = class_section.get('standardize', 'zscore')
+        self.low_pass = class_section.get('low_pass', 0.1)              # Low pass filters out high frequency signals from our data: 
+                                                                        # fMRI signals are slow evolving processes, any high frequency signals 
+                                                                        # are likely due to noise 
+        self.high_pass = class_section.get('high_pass', 0.01)           # High pass filters out any very low frequency signals (below 0.01Hz), 
+                                                                        # which may be due to intrinsic scanner instabilities
+        self.filter = class_section.get('filter', 'butterworth')        # type of filter to use for bandpass filtering
+        self.confounds = class_section.get('confounds', None)           # could add motion regressors here
