@@ -28,11 +28,9 @@ The package then carries out the following steps:
     - (for multi-surface pRF mapping) fitting Iso 2D Gaussian or DoG model to each individual surface
     
 ## Installation
-conda create --no-default-packages --name prf-workflow-env python=3.8
-conda activate prf-workflow-env
-cd /path_to_package/prf-workflow/
-pip install -r requirements.txt
-pip install -e .
+1. Install requirements from the requirements.txt file (pip install -r requirements.txt). 
+2. Install prfpy (following installation instructions here: [https://github.com/VU-Cog-Sci/prfpy/tree/main](https://github.com/VU-Cog-Sci/prfpy/tree/main))
+3. From inside prf-workflow package directory: pip install -e .
 
 ## License
 
