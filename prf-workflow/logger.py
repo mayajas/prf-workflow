@@ -1,5 +1,5 @@
 import logging
-import os.path.join as opj
+from os.path import join as opj
 
 def setup_logger(project_config):
     """
