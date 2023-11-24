@@ -116,7 +116,7 @@ class PrfMappingConfig:
     This class contains pRF mapping-related information.
     """
     def __init__(self, config_file, dir_config, project_config, logger):
-        self.proj_dir   = dir_config.proj_dir
+        self.prf_output_dir   = dir_config.prf_output_dir
         self.subject_id = project_config.subject_id
         self.hemi       = project_config.hemi
         self.n_surfs    = project_config.n_surfs
@@ -237,11 +237,11 @@ class PrfMappingConfig:
         # model name (based on above preferences)
         if self.n_surfs > 1:
             model_name     = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)+'_start_from_avg_'+str(self.start_from_avg)+'_n_surfs_'+str(self.n_surfs)
-            out_dir        = opj(self.proj_dir,'output',model_name,self.subject_id)
+            out_dir        = opj(self.prf_output_dir,model_name,self.subject_id)
         else:
             self.start_from_avg = None
             model_name          = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)
-            out_dir             = opj(self.proj_dir,'output',model_name,self.subject_id)
+            out_dir             = opj(self.prf_output_dir,model_name,self.subject_id)
         
         # check if out_dir exists, if not, create it
         if not os.path.exists(out_dir):
@@ -304,7 +304,7 @@ class MriConfig:
     """
 
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
-        self.prf_output_dir     = prf_config.out_dir
+        self.prf_output_dir     = dir_config.prf_output_dir
         self.reference_aperture = prf_config.reference_aperture
         self.FS_dir             = dir_config.FS_dir
         self.subject_id         = project_config.subject_id
