@@ -6,6 +6,7 @@ import numpy as np
 import os
 from os.path import join as opj
 import scipy
+import sys
 
 
 def replace_placeholders(config, replacements):
@@ -89,18 +90,22 @@ class DirConfig:
         # check if directories exist, write errors to logger, and return directories
         if not os.path.exists(self.FS_dir):
             self.logger.error('Freesurfer directory does not exist.')
+            sys.exit(1)
         else:
             self.logger.info('Freesurfer directory: ' + self.FS_dir)
         if not os.path.exists(self.prf_output_dir):
             self.logger.error('Output directory does not exist.')
+            sys.exit(1)
         else: 
             self.logger.info('Output directory: ' + self.prf_output_dir)
         if not os.path.exists(self.apertures_dir):
             self.logger.error('Apertures directory does not exist.')
+            sys.exit(1)
         else:
             self.logger.info('Apertures directory: ' + self.apertures_dir)
         if not os.path.exists(self.surface_tools_dir):
             self.logger.error('Surface tools directory does not exist.')
+            sys.exit(1)
         else:
             self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
 
@@ -118,7 +123,7 @@ class PrfMappingConfig:
         self.logger     = logger
         
         # get config from config file
-        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz = \
+        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture = \
             self._load_config(config_file)
 
         # calculate screen dimensions
@@ -193,9 +198,14 @@ class PrfMappingConfig:
         self.rsq_thresh_itfit = class_section.get('rsq_thresh_itfit', 0.0005) # float
                                                                                 # Rsq threshold for iterative fitting. Must be between 0 and 1.         
         self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.2)         # float
-                                                                                # Rsq threshold for visualization. Must be between 0 and 1.                                                               
+                                                                                # Rsq threshold for visualization. Must be between 0 and 1.   
+        self.reference_aperture = class_section.get('reference_aperture',  None) # if not None, the pRF model fit from this aperture will be used to initialize
+                                                                                    # the fitting for other apertures
+                                                                                    # TODO: make sure reference aperture is first in prf_run_config so that it is estimated first
+        self.logger.info('Selected reference aperture: '+self.reference_aperture)
+                                                                                                                                    
 
-        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz
+        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture
 
 
     def _get_screen_dimensions(self):
@@ -294,12 +304,13 @@ class MriConfig:
     """
 
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
-        self.prf_output_dir = prf_config.out_dir
-        self.FS_dir         = dir_config.FS_dir
-        self.subject_id     = project_config.subject_id
-        self.hemi           = project_config.hemi
-        self.n_surfs        = project_config.n_surfs
-        self.logger         = logger
+        self.prf_output_dir     = prf_config.out_dir
+        self.reference_aperture = prf_config.reference_aperture
+        self.FS_dir             = dir_config.FS_dir
+        self.subject_id         = project_config.subject_id
+        self.hemi               = project_config.hemi
+        self.n_surfs            = project_config.n_surfs
+        self.logger             = logger
 
         # get config from config file
         self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
@@ -326,6 +337,25 @@ class MriConfig:
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
         self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
         self.prf_run_config  = class_section.get('prf_run_config',  None) # dictionary containing info about pRF runs
+        
+        # Check that mean functional and pRF nifti files exist
+        if not os.path.exists(self.meanFunc_nii_fn):
+            self.logger.error('Mean functional image does not exist under this address: '+ self.meanFunc_nii_fn)
+        else:
+            self.logger.info('Mean functional image: ' + self.meanFunc_nii_fn)
+            sys.exit(1)
+        for aperture_type, config in self.prf_run_config.items():
+            for run in range(config['n_runs']):
+                if not os.path.exists(config['nii_fn_list'][run]):
+                    self.logger.error('PRF '+aperture_type+' run '+str(run)+' does not exist under this address: '+config['nii_fn_list'][run])
+                    sys.exit(1)
+                else:
+                    self.logger.info('PRF '+aperture_type+' run '+str(run)+': '+config['nii_fn_list'][run])
+
+        # Check that the reference aperture is among the apertures provided in prf_run_config
+        if (self.reference_aperture is not None) and (self.reference_aperture not in self.prf_run_config.items()):
+            self.logger.error('The selected reference aperture ('+self.reference_aperture+') is not present in the list of all stimulus apertures.')
+            sys.exit(1)
 
         return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config
     

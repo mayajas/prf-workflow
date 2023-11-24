@@ -31,7 +31,8 @@
         },
         "normalize_RFs": false,
         "rsq_thresh_itfit": 0.0005,
-        "rsq_thresh_viz": 0.2
+        "rsq_thresh_viz": 0.2,
+        "reference_aperture": "bar"
     },
     "MriConfig": {
         "TR": 2.0,

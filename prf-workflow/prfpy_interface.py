@@ -117,6 +117,9 @@ class PrfFitting:
         self.pRF_param_avg_fn           = prf_config.pRF_param_avg_fn
         self.pRF_param_per_depth_fn     = prf_config.pRF_param_per_depth_fn
 
+        # Reference aperture
+        self.reference_aperture         = prf_config.reference_aperture
+
         # Occipital mask
         self.occ_mask_fn                = mri_config.occ_mask_fn
 
@@ -239,10 +242,21 @@ class PrfFitting:
                 if not self.prfpy_output_config[aperture_type]['is_gf']['avg']['gridfit']:
                     self.logger.info('Defining 2D iso Gaussian model fitter')
                     data        = config['preproc_data_avg']
-                    self.prfpy_output_config[aperture_type]['gf_avg'] = \
-                                    Iso2DGaussianFitter(data=data, 
-                                                        model=self.prfpy_output_config[aperture_type]['gg_avg'], 
-                                                        n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+
+                    if (aperture_type == self.reference_aperture) or (self.reference_aperture is None) or (self.prfpy_output_config[self.reference_aperture]['is_gf']['avg']['itfit'] == False):
+                        self.prfpy_output_config[aperture_type]['gf_avg'] = \
+                                        Iso2DGaussianFitter(data=data, 
+                                                            model=self.prfpy_output_config[aperture_type]['gg_avg'], 
+                                                            n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+                    else:
+                        self.logger.info('Using reference aperture ('+self.reference_aperture+') to initiate '+aperture_type+' aperture fitting.')
+                        self.prfpy_output_config[aperture_type]['gf_avg'] = \
+                                        Extend_Iso2DGaussianFitter(data=data, 
+                                                            model=self.prfpy_output_config[aperture_type]['gg_avg'], 
+                                                            previous_gaussian_fitter=self.prfpy_output_config[self.reference_aperture]['gf_avg'],
+                                                            n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+
+
                     # Fit model: 
                     # grid fit
                     self.logger.info('Grid fit')
@@ -314,9 +328,17 @@ class PrfFitting:
                                                                 previous_gaussian_fitter=self.prfpy_output_config[aperture_type]['gf_avg'],
                                                                 n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
                         else:
-                            self.prfpy_output_config[aperture_type]['gf_per_depth'][depth] = \
-                                            Iso2DGaussianFitter(data=data, 
+                            if (aperture_type == self.reference_aperture) or (self.reference_aperture is None) or (self.prfpy_output_config[self.reference_aperture]['is_gf']['per_depth']['itfit'][depth] == False):
+                                self.prfpy_output_config[aperture_type]['gf_per_depth'][depth] = \
+                                                Iso2DGaussianFitter(data=data, 
+                                                                    model=self.prfpy_output_config[aperture_type]['gg_avg'], 
+                                                                    n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+                            else:
+                                self.logger.info('Using reference aperture ('+self.reference_aperture+') to initiate '+aperture_type+' aperture fitting.')
+                                self.prfpy_output_config[aperture_type]['gf_per_depth'][depth] = \
+                                            Extend_Iso2DGaussianFitter(data=data, 
                                                                 model=self.prfpy_output_config[aperture_type]['gg_avg'], 
+                                                                previous_gaussian_fitter=self.prfpy_output_config[self.reference_aperture]['gf_per_depth'][depth],
                                                                 n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
                         
                         # Fit model: grid fit
