@@ -33,19 +33,19 @@ def main(config_file,sub_idx,hem_idx):
         ###########################################################################################
         ### Setup
         ## Set data directories 
-        dir_config = DirConfig(project_config, logger)
+        dir_config = DirConfig(config_file, project_config, logger)
 
         ## Get pRF output filenames
-        prf_config = PrfMappingConfig(dir_config, project_config, logger)
+        prf_config = PrfMappingConfig(config_file, dir_config, project_config, logger)
 
         ## Get input MRI data
-        mri_config = MriConfig(project_config, dir_config, prf_config, logger)
+        mri_config = MriConfig(config_file, project_config, dir_config, prf_config, logger)
 
         ## Get aperture info
         ap_config = StimApertureConfig(dir_config,mri_config,logger)
 
         ## Get data cleaning info
-        data_clean_config = DataCleanConfig(mri_config)
+        data_clean_config = DataCleanConfig(config_file, mri_config)
 
         logger.info('Configuration ready.')
 
