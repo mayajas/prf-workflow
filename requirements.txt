@@ -5,3 +5,4 @@ joblib
 nilearn
 nipype
 nibabel
+fslpy
