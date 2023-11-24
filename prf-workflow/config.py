@@ -28,7 +28,8 @@ class ProjectConfig:
     """
     
     def __init__(self, config_file, sub_idx, hem_idx):
-        self.load_config(config_file)
+        # get config from config file
+        self.subject_list, self.hem_list, self.n_surfs, self.logger_dir = self._load_config(config_file)
         
         self.subject_id = self.subject_list[sub_idx]
         self.hemi = self.hem_list[hem_idx]
@@ -39,7 +40,7 @@ class ProjectConfig:
         except TypeError:
             self.n_procs = 1 
 
-    def load_config(self, config_file):
+    def _load_config(self, config_file):
         with open(config_file) as f:
             config_data = json.load(f)
         
@@ -49,16 +50,20 @@ class ProjectConfig:
         self.subject_list = class_section.get('subject_list', ['sub-01', 'sub-02', 'sub-03'])
         self.hem_list = class_section.get('hem_list', ['lh', 'rh'])
         self.n_surfs = class_section.get('n_surfs', 1)
+        self.logger_dir = class_section.get('logger_dir', None)
+
+        return self.subject_list, self.hem_list, self.n_surfs, self.logger_dir
 
 
 class DirConfig:
     def __init__(self, config_file, project_config, logger):
-        self.load_config(config_file)
-
         self.subject_id     = project_config.subject_id
         self.logger         = logger
 
-    def load_config(self, config_file):
+        # get config from config file
+        self.FS_dir, self.prf_output_dir, self.apertures_dir, self.surface_tools_dir = self._load_config(config_file)  
+
+    def _load_config(self, config_file):
         with open(config_file) as f:
             config_data = json.load(f)
         
@@ -70,30 +75,53 @@ class DirConfig:
         class_section = replace_placeholders(class_section, replacements)
 
         # freesurfer directory
-        self.FS_dir = class_section.get('FS_dir', opj("/scratch/mayaaj90/project-00-7t-pipeline-dev/output/wf_advanced_skullstrip/_subject_id_"+self.subject_id+"/autorecon_pial"))
+        self.FS_dir = class_section.get('FS_dir', None)
         
         # output directory
-        self.prf_output_dir = class_section.get('prf_output_dir', "/scratch/mayaaj90/project-00-7t-pipeline-dev/output")
+        self.prf_output_dir = class_section.get('prf_output_dir', None)
         
         # path to stimulus apertures mat files
-        self.apertures_dir = class_section.get('apertures_dir', "/home/mayaaj90/projects/project-00-7t-pipeline-dev/code/stim-scripts/apertures")
+        self.apertures_dir = class_section.get('apertures_dir', None)
         
         # path to surface tools 
-        self.surface_tools_dir = class_section.get('surface_tools_dir', "/home/mayaaj90/programs/surface_tools/equivolumetric_surfaces")
+        self.surface_tools_dir = class_section.get('surface_tools_dir', None)
+
+        # check if directories exist, write errors to logger, and return directories
+        if not os.path.exists(self.FS_dir):
+            self.logger.error('Freesurfer directory does not exist.')
+        else:
+            self.logger.info('Freesurfer directory: ' + self.FS_dir)
+        if not os.path.exists(self.prf_output_dir):
+            self.logger.error('Output directory does not exist.')
+        else: 
+            self.logger.info('Output directory: ' + self.prf_output_dir)
+        if not os.path.exists(self.apertures_dir):
+            self.logger.error('Apertures directory does not exist.')
+        else:
+            self.logger.info('Apertures directory: ' + self.apertures_dir)
+        if not os.path.exists(self.surface_tools_dir):
+            self.logger.error('Surface tools directory does not exist.')
+        else:
+            self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
+
+        return self.FS_dir, self.prf_output_dir, self.apertures_dir, self.surface_tools_dir
 
 class PrfMappingConfig:
     """
     This class contains pRF mapping-related information.
     """
     def __init__(self, config_file, dir_config, project_config, logger):
-        self.load_config(config_file)
-
         self.proj_dir   = dir_config.proj_dir
         self.subject_id = project_config.subject_id
         self.hemi       = project_config.hemi
         self.n_surfs    = project_config.n_surfs
         self.logger     = logger
+        
+        # get config from config file
+        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz = \
+            self._load_config(config_file)
 
+        # calculate screen dimensions
         self._get_screen_dimensions()
 
         # get grid search parameters
@@ -105,7 +133,7 @@ class PrfMappingConfig:
         # initialize prf output filenames
         self.input_data_dict_fn, self.output_data_dict_fn, self.pRF_param_avg_fn, self.x_map_mgh, self.y_map_mgh, self.prf_size_map_mgh, self.prf_amp_map_mgh, self.bold_baseline_map_mgh, self.srf_amp_map_mgh, self.srf_size_map_mgh, self.hrf_1_map_mgh, self.hrf_2_map_mgh, self.rsq_map_mgh, self.polar_map_mgh, self.ecc_map_mgh, self.pRF_param_per_depth_fn, self.polar_map_per_depth_mgh, self.ecc_map_per_depth_mgh, self.hrf_1_map_per_depth_mgh, self.hrf_2_map_per_depth_mgh = self._get_prf_output_fns()
          
-    def load_config(self, config_file):
+    def _load_config(self, config_file):
         with open(config_file) as f:
             config_data = json.load(f)
         
@@ -166,6 +194,9 @@ class PrfMappingConfig:
                                                                                 # Rsq threshold for iterative fitting. Must be between 0 and 1.         
         self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.2)         # float
                                                                                 # Rsq threshold for visualization. Must be between 0 and 1.                                                               
+
+        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz
+
 
     def _get_screen_dimensions(self):
         # pRF mapping stimulus dimensions
@@ -263,14 +294,15 @@ class MriConfig:
     """
 
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
-        self.load_config(config_file)
-
         self.prf_output_dir = prf_config.out_dir
         self.FS_dir         = dir_config.FS_dir
         self.subject_id     = project_config.subject_id
         self.hemi           = project_config.hemi
         self.n_surfs        = project_config.n_surfs
         self.logger         = logger
+
+        # get config from config file
+        self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
 
         # get input mri filenames
         self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
@@ -279,17 +311,23 @@ class MriConfig:
         self.prf_run_config, self.prfpy_output_config = self._get_prf_run_list()
 
 
-    def load_config(self, config_file):
+    def _load_config(self, config_file):
         with open(config_file) as f:
             config_data = json.load(f)
-        
+
         class_name = self.__class__.__name__
         class_section = config_data.get(class_name, {})
+
+        # Replace placeholders in the configuration data
+        replacements = {"subject_id": self.subject_id}
+        class_section = replace_placeholders(class_section, replacements)
 
         self.TR = class_section.get('TR', 2.0)
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
         self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
         self.prf_run_config  = class_section.get('prf_run_config',  None) # dictionary containing info about pRF runs
+
+        return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config
     
     def _get_mri_fns(self):
         # Freesurfer mesh filenames
@@ -405,11 +443,11 @@ class DataCleanConfig:
     """
 
     def __init__(self, config_file, mri_config):
-        self.load_config(config_file)
+        self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds = self._load_config(config_file)
 
         self.TR = mri_config.TR
 
-    def load_config(self, config_file):
+    def _load_config(self, config_file):
         with open(config_file) as f:
             config_data = json.load(f)
         
@@ -425,3 +463,5 @@ class DataCleanConfig:
                                                                         # which may be due to intrinsic scanner instabilities
         self.filter = class_section.get('filter', 'butterworth')        # type of filter to use for bandpass filtering
         self.confounds = class_section.get('confounds', None)           # could add motion regressors here
+
+        return self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds

@@ -9,20 +9,20 @@ from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfM
 from img_utils import EquivolumetricSurfaces, SurfaceProject, CleanInputData
 from prfpy_interface import PrfpyStimulus, PrfFitting
 
-def main(sub_idx,hem_idx,run_locally=False):
+def main(config_file,sub_idx,hem_idx):
     """
     Run population receptive field (pRF) mapping on a single subject's single hemisphere.
 
     Args:
+        config_file (str): Path to the configuration file, which contains the image processing and pRF analysis parameters.
         sub_idx (int): Index of the subject to analyze.
         hem_idx (int): Index of the hemisphere to run the analysis on (0 for 'lh', 1 for 'rh').
-        run_locally (bool): Whether the script is being run locally or on Curta.
 
     Returns:
         None
 
     """
-    project_config  = ProjectConfig(sub_idx,hem_idx,run_locally)
+    project_config  = ProjectConfig(config_file, sub_idx, hem_idx)
     n_procs         = project_config.n_procs
 
     ## Set up logger
@@ -83,11 +83,10 @@ if __name__ == "__main__":
     
     ### Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run pRF mapping analysis on Freesurfer surfaces.")
-    parser.add_argument("config", type=str, help="Path to the configuration file, which contains the image processing and pRF analysis parameters.")
+    parser.add_argument("config_file", type=str, help="Path to the configuration file, which contains the image processing and pRF analysis parameters.")
     parser.add_argument("sub_idx", type=int, help="Index of the subject to analyze.")
     parser.add_argument("hem_idx", type=int, choices=[0,1], help="Hemisphere to run the analysis on. This is the index of the current hemisphere from the hemisphere list: ['lh','rh']")
-    parser.add_argument("--run_locally", action='store_true', help="Flag indicating whether the script is being run locally or on Curta")
 
     args = parser.parse_args()
 
-    main(args.sub_idx, args.hem_idx, args.run_locally)
+    main(args.config_file, args.sub_idx, args.hem_idx)
