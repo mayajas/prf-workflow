@@ -6,7 +6,7 @@
         "logger_dir": "/home/mayaaj90/projects/project-01-LaminarCrowdpRF/code/analysis-scripts/python"
     },
     "DirConfig": {
-        "FS_dir": "/home/mayajas/scratch/project-01-LaminarCrowdpRF/derivatives/wf_advanced_skullstrip/_subject_id_{subject_id}/autorecon_pial/{subject_id}",
+        "FS_dir": "/scratch/mayaaj90/project-01-LaminarCrowdpRF/derivatives/wf_advanced_skullstrip/_subject_id_{subject_id}/autorecon_pial/{subject_id}",
         "prf_output_dir": "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output",
         "apertures_dir": "/home/mayaaj90/projects/project-01-LaminarCrowdpRF/code/stim-scripts/Apertures_pilot-01",
         "surface_tools_dir": "/home/mayaaj90/programs/surface_tools/equivolumetric_surfaces"
@@ -36,30 +36,29 @@
     "MriConfig": {
         "TR": 2.0,
         "equivol_fn": "equi",
-        "meanFunc_nii_fn": "/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/reg_meanFunc.nii",
-        "T1_nii_fn": "T1.nii",
+        "meanFunc_nii_fn": "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/reg_meanFunc.nii",
         "prf_run_config": {
             "bar": {
                 "n_runs": 2,
                 "ap_fn": "stimulus_bar.mat",
-                "nii_fn_list": ["/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-01_sess_nr_0_sess_nslices_60/reg_bar1.nii",
-                                "/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-02_sess_nr_1_sess_nslices_60/reg_bar2.nii"
+                "nii_fn_list": ["/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-01_sess_nr_0_sess_nslices_60/reg_bar1.nii",
+                                "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-02_sess_nr_1_sess_nslices_60/reg_bar2.nii"
                             ],
                 "mgh_fn_list": []
             },
             "baseline": {
                 "n_runs": 2,
                 "ap_fn": "stimulus_baseline.mat",
-                "nii_fn_list": ["/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-baseline_run-01_sess_nr_2_sess_nslices_68/reg_baseline1.nii", 
-                                "/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-baseline_run-02_sess_nr_3_sess_nslices_68/reg_baseline2.nii"
+                "nii_fn_list": ["/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-baseline_run-01_sess_nr_2_sess_nslices_68/reg_baseline1.nii", 
+                                "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-baseline_run-02_sess_nr_3_sess_nslices_68/reg_baseline2.nii"
                             ],
                 "mgh_fn_list": []
             },
             "global": {
                 "n_runs": 2,
                 "ap_fn": "stimulus_global.mat",
-                "nii_fn_list": ["/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-global_run-01_sess_nr_4_sess_nslices_68/reg_global1.nii", 
-                                "/home/mayajas/scratch/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-global_run-02_sess_nr_5_sess_nslices_68/reg_global2.nii"
+                "nii_fn_list": ["/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-global_run-01_sess_nr_4_sess_nslices_68/reg_global1.nii", 
+                                "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-global_run-02_sess_nr_5_sess_nslices_68/reg_global2.nii"
                             ],
                 "mgh_fn_list": []
             }
