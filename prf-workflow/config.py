@@ -69,9 +69,6 @@ class DirConfig:
         replacements = {"subject_id": self.subject_id}
         class_section = replace_placeholders(class_section, replacements)
 
-        # prepped input directory
-        self.prf_input_dir = class_section.get('prf_input_dir', opj("/scratch/mayaaj90/project-00-7t-pipeline-dev/output/prfpy_surf_prepped_inputs",self.subject_id))
-        
         # freesurfer directory
         self.FS_dir = class_section.get('FS_dir', opj("/scratch/mayaaj90/project-00-7t-pipeline-dev/output/wf_advanced_skullstrip/_subject_id_"+self.subject_id+"/autorecon_pial"))
         
@@ -233,8 +230,6 @@ class PrfMappingConfig:
         ecc_map_mgh             = opj(self.out_dir,self.hemi+'.ecc.mgh')
         rsq_map_mgh             = opj(self.out_dir,self.hemi+'.rsq.mgh')
         
-        
-
         # layer-specific
         if self.n_surfs > 1:
             # prfpy outputs
@@ -270,7 +265,6 @@ class MriConfig:
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
         self.load_config(config_file)
 
-        self.prf_input_dir  = dir_config.prf_input_dir
         self.prf_output_dir = prf_config.out_dir
         self.FS_dir         = dir_config.FS_dir
         self.subject_id     = project_config.subject_id
@@ -292,19 +286,10 @@ class MriConfig:
         class_name = self.__class__.__name__
         class_section = config_data.get(class_name, {})
 
-        self.TR = class_section.get('TR', 3.0)
+        self.TR = class_section.get('TR', 2.0)
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
-        self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', opj(self.prf_input_dir,'reg_meanFunc.nii')) # mean functional nitfti filepath and name
-        self.T1_nii_fn = class_section.get('T1_nii_fn', opj(self.prf_input_dir,'T1_out.nii')) # T1 nifti filepath and name
-        self.prf_run_config  = class_section.get('prf_run_config',  {
-                                                                    'bar': {
-                                                                        'n_runs': 2,
-                                                                        'ap_fn': 'stimulus_bar.mat',
-                                                                        'fn_prefix': 'reg_bar',
-                                                                        'nii_fn_list': [],
-                                                                        'mgh_fn_list': []
-                                                                        }
-                                                                    })
+        self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
+        self.prf_run_config  = class_section.get('prf_run_config',  None) # dictionary containing info about pRF runs
     
     def _get_mri_fns(self):
         # Freesurfer mesh filenames
@@ -331,17 +316,13 @@ class MriConfig:
     
     def _get_prf_run_list(self):
         for aperture_type, config in self.prf_run_config.items():
-            nii_fn_list = []
             mgh_fn_list = []
             for run in range(config['n_runs']):
-                nii_fn = opj(self.prf_input_dir, config['fn_prefix'] + str(run + 1) + '.nii')
                 mgh_fn = []
                 for depth in range(self.n_surfs if self.n_surfs > 1 else 1):
                     mgh_fn.append(opj(self.prf_output_dir, f"{self.hemi}.equi{depth}.{aperture_type}{run + 1}.mgh"))
-                nii_fn_list.append(nii_fn)
                 mgh_fn_list.append(mgh_fn)
 
-            config['nii_fn_list'] = nii_fn_list
             config['mgh_fn_list'] = mgh_fn_list
 
         prfpy_output_config = {
