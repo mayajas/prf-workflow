@@ -357,7 +357,7 @@ class MriConfig:
                     self.logger.info('PRF '+aperture_type+' run '+str(run)+': '+config['nii_fn_list'][run])
 
         # Check that the reference aperture is among the apertures provided in prf_run_config
-        if (self.reference_aperture is not None) and (self.reference_aperture not in self.prf_run_config.items()):
+        if (self.reference_aperture is not None) and (self.reference_aperture not in self.prf_run_config.values()):
             self.logger.error('The selected reference aperture ('+self.reference_aperture+') is not present in the list of all stimulus apertures.')
             sys.exit(1)
 
