@@ -365,9 +365,9 @@ class MriConfig:
     
     def _get_mri_fns(self):
         # Freesurfer mesh filenames
-        gm_surf_fn          = opj(self.FS_dir,'surf',self.hemi+'.pial')
-        wm_surf_fn          = opj(self.FS_dir,'surf',self.hemi+'.white')
-        inflated_surf_fn    = opj(self.FS_dir,'surf',self.hemi+'.inflated')
+        gm_surf_fn          = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.pial')
+        wm_surf_fn          = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.white')
+        inflated_surf_fn    = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.inflated')
 
         # equivolumetric surface output filenames
         if self.n_surfs > 1:

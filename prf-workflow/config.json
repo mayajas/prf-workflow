@@ -6,7 +6,7 @@
         "logger_dir": "/home/mayaaj90/projects/project-01-LaminarCrowdpRF/code/analysis-scripts/python"
     },
     "DirConfig": {
-        "FS_dir": "/scratch/mayaaj90/project-01-LaminarCrowdpRF/derivatives/wf_advanced_skullstrip/_subject_id_{subject_id}/autorecon_pial/{subject_id}",
+        "FS_dir": "/scratch/mayaaj90/project-01-LaminarCrowdpRF/derivatives/wf_advanced_skullstrip/_subject_id_{subject_id}/autorecon_pial",
         "prf_output_dir": "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output",
         "apertures_dir": "/home/mayaaj90/projects/project-01-LaminarCrowdpRF/code/stim-scripts/Apertures_pilot-01",
         "surface_tools_dir": "/home/mayaaj90/programs/surface_tools/equivolumetric_surfaces"
