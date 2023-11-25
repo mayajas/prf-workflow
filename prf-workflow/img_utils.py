@@ -82,8 +82,7 @@ class EquivolumetricSurfaces:
             conda_python_path = opj(sys.prefix, 'bin')
             conda_site_packages = opj(sys.prefix, 'lib', 'python' + sys.version[:3], 'site-packages')
 
-            command = [conda_python_path + ' ' + command[0]] + command[1:]
-
+            command = opj(conda_python_path,command[0]) + command[1:]
             env['PYTHONPATH'] = conda_site_packages
 
         # run the command
