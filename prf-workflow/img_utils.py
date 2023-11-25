@@ -86,13 +86,17 @@ class EquivolumetricSurfaces:
 
             env['PYTHONPATH'] = conda_site_packages
 
+        # print the command
+        self.logger.info('Command: {}'.format(' '.join(command)))
+
         # run the command
         try:
-            result = subprocess.run(command, env=env, stdout=subprocess.PIPE, shell=False, check=True)
+            result = subprocess.run(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False, check=True)
             self.logger.info('Command output:\n{}'.format(result.stdout.decode('utf-8')))
             self.logger.info('Equivolumetric surfaces generated.')
         except subprocess.CalledProcessError as e:
             self.logger.error(f"Command failed with return code {e.returncode}: {e}")
+            self.logger.error('Command stderr:\n{}'.format(e.stderr.decode('utf-8')))
             sys.exit(1)  # Exit with a non-zero code to indicate error
 
 class SurfaceProject:
