@@ -19,7 +19,6 @@ class EquivolumetricSurfaces:
     Attributes:
         subject_id (str): Subject ID
         hemi (str): Hemisphere
-        run_locally (bool): Whether to run the analysis locally or on CURTA
         dir_config (DirConfig): Directory configuration
         mri_config (MriConfig): MRI configuration
         n_surfs (int): Number of equivolumetric surfaces
@@ -29,7 +28,6 @@ class EquivolumetricSurfaces:
     def __init__(self, project_config, dir_config, mri_config, logger):
         self.subject_id     = project_config.subject_id
         self.hemi           = project_config.hemi
-        self.run_locally    = project_config.run_locally
         self.dir_config     = dir_config
         self.mri_config     = mri_config
         self.n_surfs        = project_config.n_surfs
@@ -45,10 +43,6 @@ class EquivolumetricSurfaces:
             # If equivolumetric surfaces don't exist, generate them
             if all_files_exist:
                 self.logger.info('Equivolumetric surfaces already exist.')
-            # elif not all_files_exist and not run_locally:
-            #     self.logger.info('Equivolumetric surfaces don\'t exist and must be generated locally (not on CURTA).')
-            #     sys.exit("Equivolumetric surfaces don\'t exist and must be generated locally (not on CURTA).")
-            # elif not all_files_exist and run_locally:
             else:
                 self.logger.info('Generating {} equivolumetric surfaces...'.format(self.n_surfs))
                 self._gen_equivol_surfs()

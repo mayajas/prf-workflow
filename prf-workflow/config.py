@@ -454,7 +454,7 @@ class StimApertureConfig:
                 try:
                     # Load the aperture file using scipy.io.loadmat
                     mat = scipy.io.loadmat(Ap_file)
-                    design_matrix = mat["stim"]
+                    design_matrix = mat["aperture"]
                     # Add a new field to the dictionary with the loaded array
                     stimulus_config['design_matrix'] = design_matrix
                     self.logger.info(f"Loaded aperture array for {stimulus_type} stimulus type.")
