@@ -65,7 +65,7 @@ class DirConfig:
         self.logger         = logger
 
         # get config from config file
-        self.FS_dir, self.prf_output_dir, self.apertures_dir, self.surface_tools_dir = self._load_config(config_file)  
+        self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir = self._load_config(config_file)  
 
     def _load_config(self, config_file):
         with open(config_file) as f:
@@ -82,7 +82,7 @@ class DirConfig:
         self.FS_dir = class_section.get('FS_dir', None)
         
         # output directory
-        self.prf_output_dir = class_section.get('prf_output_dir', None)
+        self.output_dir = class_section.get('output_dir', None)
         
         # path to stimulus apertures mat files
         self.apertures_dir = class_section.get('apertures_dir', None)
@@ -96,11 +96,11 @@ class DirConfig:
             sys.exit(1)
         else:
             self.logger.info('Freesurfer directory: ' + self.FS_dir)
-        if not os.path.exists(self.prf_output_dir):
+        if not os.path.exists(self.output_dir):
             self.logger.error('Output directory does not exist.')
             sys.exit(1)
         else: 
-            self.logger.info('Output directory: ' + self.prf_output_dir)
+            self.logger.info('Output directory: ' + self.output_dir)
         if not os.path.exists(self.apertures_dir):
             self.logger.error('Apertures directory does not exist.')
             sys.exit(1)
@@ -112,14 +112,14 @@ class DirConfig:
         else:
             self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
 
-        return self.FS_dir, self.prf_output_dir, self.apertures_dir, self.surface_tools_dir
+        return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir
 
 class PrfMappingConfig:
     """
     This class contains pRF mapping-related information.
     """
     def __init__(self, config_file, dir_config, project_config, logger):
-        self.prf_output_dir   = dir_config.prf_output_dir
+        self.output_dir = dir_config.output_dir
         self.subject_id = project_config.subject_id
         self.hemi       = project_config.hemi
         self.n_surfs    = project_config.n_surfs
@@ -136,7 +136,7 @@ class PrfMappingConfig:
         self.size_grid, self.ecc_grid, self.polar_grid, self.surround_amplitude_grid, self.surround_size_grid = self._get_grid_search_params()
 
         # initialize pRF model preferences and output directory name
-        self.model_name, self.avg_runs, self.out_dir = self._get_prf_mapping_config()
+        self.model_name, self.avg_runs, self.prf_output_dir = self._get_prf_mapping_config()
         
         # initialize prf output filenames
         self.input_data_dict_fn, self.output_data_dict_fn, self.pRF_param_avg_fn, self.x_map_mgh, self.y_map_mgh, self.prf_size_map_mgh, self.prf_amp_map_mgh, self.bold_baseline_map_mgh, self.srf_amp_map_mgh, self.srf_size_map_mgh, self.hrf_1_map_mgh, self.hrf_2_map_mgh, self.rsq_map_mgh, self.polar_map_mgh, self.ecc_map_mgh, self.pRF_param_per_depth_fn, self.polar_map_per_depth_mgh, self.ecc_map_per_depth_mgh, self.hrf_1_map_per_depth_mgh, self.hrf_2_map_per_depth_mgh = self._get_prf_output_fns()
@@ -240,54 +240,54 @@ class PrfMappingConfig:
         # model name (based on above preferences)
         if self.n_surfs > 1:
             model_name     = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)+'_start_from_avg_'+str(self.start_from_avg)+'_n_surfs_'+str(self.n_surfs)
-            out_dir        = opj(self.prf_output_dir,model_name,self.subject_id)
+            prf_output_dir        = opj(self.output_dir,model_name,self.subject_id)
         else:
             self.start_from_avg = None
             model_name          = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)
-            out_dir             = opj(self.prf_output_dir,model_name,self.subject_id)
+            prf_output_dir             = opj(self.output_dir,model_name,self.subject_id)
         
-        # check if out_dir exists, if not, create it
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+        # check if prf_output_dir exists, if not, create it
+        if not os.path.exists(prf_output_dir):
+            os.makedirs(prf_output_dir)
 
-        return model_name, self.avg_runs, out_dir
+        return model_name, self.avg_runs, prf_output_dir
         
     def _get_prf_output_fns(self):
         # data dictionary files
-        input_data_dict_fn      = opj(self.out_dir,self.hemi+'_input_data.pckl')
-        output_data_dict_fn     = opj(self.out_dir,self.hemi+'_output_data.pckl')
+        input_data_dict_fn      = opj(self.prf_output_dir,self.hemi+'_input_data.pckl')
+        output_data_dict_fn     = opj(self.prf_output_dir,self.hemi+'_output_data.pckl')
 
         # avg across depths
         # prfpy outputs
-        pRF_param_avg_fn        = opj(self.out_dir,self.hemi+'_pRF_params_avg')
+        pRF_param_avg_fn        = opj(self.prf_output_dir,self.hemi+'_pRF_params_avg')
 
-        x_map_mgh               = opj(self.out_dir,self.hemi+'.x.mgh')
-        y_map_mgh               = opj(self.out_dir,self.hemi+'.y.mgh')
-        prf_size_map_mgh        = opj(self.out_dir,self.hemi+'.prf_size.mgh')
-        prf_amp_map_mgh         = opj(self.out_dir,self.hemi+'.prf_amp.mgh')
-        bold_baseline_map_mgh   = opj(self.out_dir,self.hemi+'.bold_baseline.mgh')
-        srf_amp_map_mgh         = opj(self.out_dir,self.hemi+'.srf_amp.mgh')
-        srf_size_map_mgh        = opj(self.out_dir,self.hemi+'.srf_size.mgh')
-        hrf_1_map_mgh           = opj(self.out_dir,self.hemi+'.hrf_1.mgh')
-        hrf_2_map_mgh           = opj(self.out_dir,self.hemi+'.hrf_2.mgh')
-        polar_map_mgh           = opj(self.out_dir,self.hemi+'.pol.mgh')
-        ecc_map_mgh             = opj(self.out_dir,self.hemi+'.ecc.mgh')
-        rsq_map_mgh             = opj(self.out_dir,self.hemi+'.rsq.mgh')
+        x_map_mgh               = opj(self.prf_output_dir,self.hemi+'.x.mgh')
+        y_map_mgh               = opj(self.prf_output_dir,self.hemi+'.y.mgh')
+        prf_size_map_mgh        = opj(self.prf_output_dir,self.hemi+'.prf_size.mgh')
+        prf_amp_map_mgh         = opj(self.prf_output_dir,self.hemi+'.prf_amp.mgh')
+        bold_baseline_map_mgh   = opj(self.prf_output_dir,self.hemi+'.bold_baseline.mgh')
+        srf_amp_map_mgh         = opj(self.prf_output_dir,self.hemi+'.srf_amp.mgh')
+        srf_size_map_mgh        = opj(self.prf_output_dir,self.hemi+'.srf_size.mgh')
+        hrf_1_map_mgh           = opj(self.prf_output_dir,self.hemi+'.hrf_1.mgh')
+        hrf_2_map_mgh           = opj(self.prf_output_dir,self.hemi+'.hrf_2.mgh')
+        polar_map_mgh           = opj(self.prf_output_dir,self.hemi+'.pol.mgh')
+        ecc_map_mgh             = opj(self.prf_output_dir,self.hemi+'.ecc.mgh')
+        rsq_map_mgh             = opj(self.prf_output_dir,self.hemi+'.rsq.mgh')
         
         # layer-specific
         if self.n_surfs > 1:
             # prfpy outputs
-            pRF_param_per_depth_fn      = opj(self.out_dir,self.hemi+'_pRF_params_per_depth')
+            pRF_param_per_depth_fn      = opj(self.prf_output_dir,self.hemi+'_pRF_params_per_depth')
 
             # prf parameter maps
-            polar_map_per_depth_mgh     = [opj(self.out_dir,self.hemi+'.pol.'+str(depth)+'.mgh')
+            polar_map_per_depth_mgh     = [opj(self.prf_output_dir,self.hemi+'.pol.'+str(depth)+'.mgh')
                                             for depth in range(0,self.n_surfs)]
-            ecc_map_per_depth_mgh       = [opj(self.out_dir,self.hemi+'.ecc.'+str(depth)+'.mgh')
+            ecc_map_per_depth_mgh       = [opj(self.prf_output_dir,self.hemi+'.ecc.'+str(depth)+'.mgh')
                                             for depth in range(0,self.n_surfs)]
             if self.fit_hrf:
-                hrf_1_map_per_depth_mgh = [opj(self.out_dir,self.hemi+'.hrf_1.'+str(depth)+'.mgh')
+                hrf_1_map_per_depth_mgh = [opj(self.prf_output_dir,self.hemi+'.hrf_1.'+str(depth)+'.mgh')
                                             for depth in range(0,self.n_surfs)]
-                hrf_2_map_per_depth_mgh = [opj(self.out_dir,self.hemi+'.hrf_2.'+str(depth)+'.mgh')
+                hrf_2_map_per_depth_mgh = [opj(self.prf_output_dir,self.hemi+'.hrf_2.'+str(depth)+'.mgh')
                                             for depth in range(0,self.n_surfs)]
             else:
                 hrf_1_map_per_depth_mgh = None
@@ -307,7 +307,7 @@ class MriConfig:
     """
 
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
-        self.prf_output_dir     = dir_config.prf_output_dir
+        self.prf_output_dir     = prf_config.prf_output_dir
         self.reference_aperture = prf_config.reference_aperture
         self.FS_dir             = dir_config.FS_dir
         self.subject_id         = project_config.subject_id
