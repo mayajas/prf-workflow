@@ -16,6 +16,9 @@ def replace_placeholders(config, replacements):
     elif isinstance(config, str):
         for placeholder, replacement in replacements.items():
             config = config.replace("{" + placeholder + "}", str(replacement))
+    elif isinstance(config, list):
+        for i, item in enumerate(config):
+            config[i] = replace_placeholders(item, replacements)
     return config
 
 class ProjectConfig:
