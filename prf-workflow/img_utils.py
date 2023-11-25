@@ -61,8 +61,6 @@ class EquivolumetricSurfaces:
         wm_surf_fn              = self.mri_config.wm_surf_fn
         n_surfs                 = self.n_surfs
         equivol_output_prefix   = self.hemi+'.'+self.mri_config.equivol_fn
-        conda_python_path       = self.dir_config.conda_python_path
-        conda_site_packages     = self.dir_config.conda_site_packages
 
         # add path to surface_tools
         sys.path.append(surface_tools_dir)
