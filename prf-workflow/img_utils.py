@@ -78,8 +78,9 @@ class EquivolumetricSurfaces:
 
         # if running on CURTA, add conda environment to path (otherwise, the nibabel package isn't found within the subprocess)
         if is_running_on_slurm():
-            conda_python_path = os.path.join(sys.prefix, 'bin/')
-            conda_site_packages = os.path.join(sys.prefix, 'lib', 'python' + sys.version[:3], 'site-packages')
+            self.logger.info('Running on CURTA. Adding conda environment to path...')
+            conda_python_path = opj(sys.prefix, 'bin')
+            conda_site_packages = opj(sys.prefix, 'lib', 'python' + sys.version[:3], 'site-packages')
 
             command = [conda_python_path+command[0]]+command[1:]
             env['PYTHONPATH'] = conda_site_packages
