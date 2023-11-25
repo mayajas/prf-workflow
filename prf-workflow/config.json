@@ -44,24 +44,21 @@
                 "ap_fn": "stimulus_bar.mat",
                 "nii_fn_list": ["/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-01_sess_nr_0_sess_nslices_60/reg_bar1.nii",
                                 "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-02_sess_nr_1_sess_nslices_60/reg_bar2.nii"
-                            ],
-                "mgh_fn_list": []
+                            ]
             },
             "baseline": {
                 "n_runs": 2,
                 "ap_fn": "stimulus_baseline.mat",
                 "nii_fn_list": ["/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-baseline_run-01_sess_nr_2_sess_nslices_68/reg_baseline1.nii", 
                                 "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-baseline_run-02_sess_nr_3_sess_nslices_68/reg_baseline2.nii"
-                            ],
-                "mgh_fn_list": []
+                            ]
             },
             "global": {
                 "n_runs": 2,
                 "ap_fn": "stimulus_global.mat",
                 "nii_fn_list": ["/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-global_run-01_sess_nr_4_sess_nslices_68/reg_global1.nii", 
                                 "/scratch/mayaaj90/project-01-LaminarCrowdpRF/output/func/coreg/_subject_id_{subject_id}/_sess_id_task-global_run-02_sess_nr_5_sess_nslices_68/reg_global2.nii"
-                            ],
-                "mgh_fn_list": []
+                            ]
             }
         }
     },

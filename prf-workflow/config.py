@@ -341,9 +341,10 @@ class MriConfig:
         # Check that mean functional and pRF nifti files exist
         if not os.path.exists(self.meanFunc_nii_fn):
             self.logger.error('Mean functional image does not exist under this address: '+ self.meanFunc_nii_fn)
+            sys.exit(1)
         else:
             self.logger.info('Mean functional image: ' + self.meanFunc_nii_fn)
-            sys.exit(1)
+            
         for aperture_type, config in self.prf_run_config.items():
             for run in range(config['n_runs']):
                 if not os.path.exists(config['nii_fn_list'][run]):
