@@ -216,7 +216,9 @@ class PrfMappingConfig:
         self.screen_halfheight_cm = self.screen_height_cm/2
         self.max_ecc                 = math.atan(self.screen_halfheight_cm/self.screen_distance_cm)
         self.max_ecc_deg             = math.degrees(self.max_ecc)
-        self.max_ecc_size            = round(self.max_ecc_deg,2)
+        self.max_ecc_size            = math.ceil(self.max_ecc_deg,2)
+
+        self.logger.info('Max eccentricity: '+str(self.max_ecc_deg)+' degrees')
     
    
     def _get_grid_search_params(self):
