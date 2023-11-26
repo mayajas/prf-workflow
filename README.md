@@ -29,7 +29,6 @@ The package then carries out the following steps:
     
 ## Installation
 1. Install requirements from the requirements.txt file (pip install -r requirements.txt). 
-2. If the pip install of fslpy does not work (), then use 'conda install --force-reinstall -c conda-forge fslpy'
 2. Install prfpy (following installation instructions here: [https://github.com/VU-Cog-Sci/prfpy/tree/main](https://github.com/VU-Cog-Sci/prfpy/tree/main))
 3. From inside prf-workflow package directory: pip install -e .
 4. Clone surface_tools: git clone https://github.com/kwagstyl/surface_tools. Add the corresponding directory in the config.py file under surface_tools_dir.
