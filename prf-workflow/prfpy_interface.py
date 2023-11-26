@@ -21,8 +21,7 @@ def pckl_suffix(filename):
 class PrfpyStimulus:
     def __init__(self, dir_config, mri_config, prf_config, logger):
         self.dir_config             = dir_config
-        self.programs_dir           = dir_config.programs_dir
-
+        
         self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
         self.screen_distance_cm     = prf_config.screen_distance_cm
         self.TR                     = mri_config.TR
