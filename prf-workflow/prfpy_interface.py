@@ -21,7 +21,7 @@ def pckl_suffix(filename):
 class PrfpyStimulus:
     def __init__(self, dir_config, mri_config, prf_config, logger):
         self.dir_config             = dir_config
-        
+
         self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
         self.screen_distance_cm     = prf_config.screen_distance_cm
         self.TR                     = mri_config.TR
@@ -93,9 +93,6 @@ class PrfFitting:
         self.hrf                        = prf_config.hrf
         self.filter_predictions         = prf_config.filter_predictions
         self.filter_type                = prf_config.filter_type
-
-        self.sg_filter_window_length    = prf_config.sg_filter_window_length
-        self.sg_filter_polyorder        = prf_config.sg_filter_polyorder
         self.filter_params              = prf_config.filter_params
 
         self.logger                     = logger
