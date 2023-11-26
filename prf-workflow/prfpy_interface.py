@@ -855,31 +855,30 @@ class PrfFitting:
 
 
 
-class CfStimulus:
+# class CfStimulus:
 
-    def __init__(self, dir_config, mri_config, prf_config, logger):
-        self.dir_config             = dir_config
-        self.programs_dir           = dir_config.programs_dir
+#     def __init__(self, dir_config, mri_config, prf_config, logger):
+#         self.dir_config             = dir_config
 
-        self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
-        self.screen_distance_cm     = prf_config.screen_distance_cm
-        self.TR                     = mri_config.TR
+#         self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
+#         self.screen_distance_cm     = prf_config.screen_distance_cm
+#         self.TR                     = mri_config.TR
 
-        self.prf_run_config         = mri_config.prf_run_config
-        self.prfpy_output_config    = mri_config.prfpy_output_config
-        self.output_data_dict_fn    = prf_config.output_data_dict_fn
+#         self.prf_run_config         = mri_config.prf_run_config
+#         self.prfpy_output_config    = mri_config.prfpy_output_config
+#         self.output_data_dict_fn    = prf_config.output_data_dict_fn
 
-        self.logger                 = logger
+#         self.logger                 = logger
         
-        # Create stimulus object
-        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        self.logger.info('Creating stimulus object')
-        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        mri_config.prfpy_output_config  = self._create_cf_stim_obj()
-        self.logger.info('Stimulus object created')
+#         # Create stimulus object
+#         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#         self.logger.info('Creating stimulus object')
+#         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+#         mri_config.prfpy_output_config  = self._create_cf_stim_obj()
+#         self.logger.info('Stimulus object created')
 
-    def _create_cf_stim_obj(self):
-        """
-        Create a stimulus object for CF modeling.
-        """
-        from prfpy.stimulus import CFStimulus
+#     def _create_cf_stim_obj(self):
+#         """
+#         Create a stimulus object for CF modeling.
+#         """
+#         from prfpy.stimulus import CFStimulus
