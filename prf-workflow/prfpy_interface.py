@@ -19,6 +19,14 @@ def pckl_suffix(filename):
         return filename + '.pckl'
 
 class PrfpyStimulus:
+    """
+    Create a stimulus object for prfpy.
+    Args:
+        dir_config (DirConfig object): Directory configuration object.
+        mri_config (MriConfig object): MRI configuration object.
+        prf_config (PrfMappingConfig object): pRF mapping configuration object.
+        logger (logging.Logger object): Logger object.
+    """
     def __init__(self, dir_config, mri_config, prf_config, logger):
         self.dir_config             = dir_config
 
@@ -68,12 +76,21 @@ class PrfpyStimulus:
                     pickle.dump(self.prfpy_output_config, pickle_file)
             else:
                 self.logger.info('Stimulus object already defined')
-            
-            
+           
+           
         return self.prfpy_output_config
         
 
 class PrfFitting:
+    """
+    Fit pRF model.
+    Args:
+        dir_config (DirConfig object): Directory configuration object.
+        mri_config (MriConfig object): MRI configuration object.
+        prf_config (PrfMappingConfig object): pRF mapping configuration object.
+        project_config (ProjectConfig object): Project configuration object.
+        logger (logging.Logger object): Logger object.
+    """
     def __init__(self,dir_config,mri_config,prf_config,project_config,logger):
 
         # Configuration parameters
@@ -612,7 +629,7 @@ class PrfFitting:
                     } for key in self.prfpy_output_config
                 }
                 
-                for aperture_type, config in self.prf_run_config.items():
+                for aperture_type in self.prf_run_config:
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     if which_model == 'Iso':
                         prf_params[aperture_type]['x']=self.prfpy_output_config[aperture_type]['gf_avg'].iterative_search_params[:,0]
@@ -690,7 +707,7 @@ class PrfFitting:
                     } for key in self.prfpy_output_config
                 }
 
-                for aperture_type, config in self.prf_run_config.items():
+                for aperture_type in self.prf_run_config.items():
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     
                     for depth in range(0,self.n_surfs):
@@ -750,7 +767,7 @@ class PrfFitting:
         ###########################################################################################
         # Save pRF parameters to mgh for delineations and visualization
         with open(self.occ_mask_fn, 'rb') as pickle_file:
-                occ_mask,n_vtx = pickle.load(pickle_file)
+            occ_mask, n_vtx = pickle.load(pickle_file)
 
         if which_surf == 'single' or which_surf == 'avg':
             

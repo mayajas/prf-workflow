@@ -2,7 +2,6 @@
 ##/usr/bin/env python
 import argparse
 import sys
-from os.path import join as opj
 
 from logger import setup_logger
 from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfMappingConfig, DataCleanConfig
@@ -42,7 +41,7 @@ def main(config_file,sub_idx,hem_idx):
         mri_config = MriConfig(config_file, project_config, dir_config, prf_config, logger)
 
         ## Get aperture info
-        ap_config = StimApertureConfig(dir_config,mri_config,logger)
+        StimApertureConfig(dir_config, mri_config, logger)
 
         ## Get data cleaning info
         data_clean_config = DataCleanConfig(config_file, mri_config)
@@ -74,8 +73,12 @@ def main(config_file,sub_idx,hem_idx):
 
 
         logger.info("pRF analysis completed successfully")
-    except Exception as e:
+    except FileNotFoundError as e:
         logger.error(f"Error: {str(e)}")
+        logger.exception("Full exception traceback:")
+        sys.exit(1)  # Exit with a non-zero code to indicate error
+    except Exception as e:
+        logger.error(f"Unknown error occurred: {str(e)}")
         logger.exception("Full exception traceback:")
         sys.exit(1)  # Exit with a non-zero code to indicate error
 

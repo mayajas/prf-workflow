@@ -117,19 +117,19 @@ class SurfaceProject:
         # surface project mean functionals
         source_file = self.mri_config.meanFunc_nii_fn
         if self.n_surfs > 1:
-            surface     = self.mri_config.equi_surf_fn_list[0]
+            projection_surface     = self.mri_config.equi_surf_fn_list[0]
         else:
-            surface     = 'wm'
+            projection_surface     = 'wm'
         out_file    = self.mri_config.meanFunc_mgh_fn
         if not os.path.exists(out_file):
             logger.info('Surface-projecting mean functional...')
             logger.info('Source file: {}'.format(source_file))
-            logger.info('Surface: {}'.format(surface))
+            logger.info('Surface: {}'.format(projection_surface))
             logger.info('Output file: {}'.format(out_file))
             if not os.path.exists(out_file):
                 try:
                     logger.info('FS_dir: {}'.format(self.dir_config.FS_dir))
-                    self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,surface,out_file)
+                    self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,projection_surface,out_file)
                     logger.info('Surface-projecting mean functional completed.')
                 except Exception as e:
                     logger.error(f"Error: {str(e)}")
@@ -146,16 +146,16 @@ class SurfaceProject:
                 for depth in range(0,self.n_surfs):
                     source_file = config['nii_fn_list'][run]
                     if self.n_surfs > 1:
-                        surface = self.mri_config.equi_surf_fn_list[depth]
+                        projection_surface = self.mri_config.equi_surf_fn_list[depth]
                     elif depth == 0 and self.n_surfs == 1:
-                        surface = 'wm'
+                        projection_surface = 'wm'
                     out_file = config['mgh_fn_list'][run][depth]
                     if not os.path.exists(out_file):
                         logger.info('Source file: {}'.format(source_file))
-                        logger.info('Surface: {}'.format(surface))
+                        logger.info('Surface: {}'.format(projection_surface))
                         logger.info('Output file: {}'.format(out_file))
                         try:
-                            self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,surface,out_file)
+                            self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,projection_surface,out_file)
                             logger.info('Surface-projecting pRF mapping run {} of {} for {} aperture type and {} depth completed.'.format(run+1,config['n_runs'],aperture_type,depth+1))
                         except Exception as e:
                             logger.error(f"Error: {str(e)}")
@@ -164,7 +164,7 @@ class SurfaceProject:
                     else:
                         logger.info('run {} of {} for depth {} already surface-projected.'.format(run+1,config['n_runs'],depth+1))
                         
-    def _surface_project(self,FS_dir,subject_id,hemi,source_file,surface,out_file):    
+    def _surface_project(self,FS_dir,subject_id,hemi,source_file,projection_surface,out_file):    
         # set environment FS subjects dir
         os.environ["SUBJECTS_DIR"] = FS_dir
 
@@ -176,7 +176,7 @@ class SurfaceProject:
         sampler.inputs.sampling_method = "point"
         sampler.inputs.sampling_range = 0.0
         sampler.inputs.sampling_units = "mm"
-        sampler.inputs.surface = surface
+        sampler.inputs.surface = projection_surface
         sampler.inputs.out_file = out_file
         sampler.run()
 
