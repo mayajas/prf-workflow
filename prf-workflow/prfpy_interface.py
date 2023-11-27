@@ -267,7 +267,7 @@ class PrfFitting:
                                         Extend_Iso2DGaussianFitter(data=data, 
                                                             model=self.prfpy_output_config[aperture_type]['gg_avg'], 
                                                             previous_gaussian_fitter=self.prfpy_output_config[self.reference_aperture]['gf_avg'],
-                                                            n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+                                                            n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf)
 
 
                     # Fit model: 
@@ -339,7 +339,7 @@ class PrfFitting:
                                             Extend_Iso2DGaussianFitter(data=data, 
                                                                 model=self.prfpy_output_config[aperture_type]['gg_avg'], 
                                                                 previous_gaussian_fitter=self.prfpy_output_config[aperture_type]['gf_avg'],
-                                                                n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+                                                                n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf)
                         else:
                             if (aperture_type == self.reference_aperture) or (self.reference_aperture is None) or (self.prfpy_output_config[self.reference_aperture]['is_gf']['per_depth']['itfit'][depth] == False):
                                 self.prfpy_output_config[aperture_type]['gf_per_depth'][depth] = \
@@ -352,7 +352,7 @@ class PrfFitting:
                                             Extend_Iso2DGaussianFitter(data=data, 
                                                                 model=self.prfpy_output_config[aperture_type]['gg_avg'], 
                                                                 previous_gaussian_fitter=self.prfpy_output_config[self.reference_aperture]['gf_per_depth'][depth],
-                                                                n_jobs=self.n_procs, fit_hrf=self.fit_hrf)
+                                                                n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf)
                         
                         # Fit model: grid fit
                         self.logger.info('Grid fit')
