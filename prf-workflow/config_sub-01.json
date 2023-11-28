@@ -18,7 +18,6 @@
         "avg_runs": true,
         "fit_hrf": false,
         "start_from_avg": true,
-        "fit_css": false,
         "grid_nr": 30,
         "y_coord_cutoff": -25,
         "verbose": true,

@@ -125,7 +125,7 @@ class PrfMappingConfig:
         self.logger     = logger
         
         # get config from config file
-        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture = \
+        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture = \
             self._load_config(config_file)
 
         # calculate screen dimensions
@@ -165,8 +165,6 @@ class PrfMappingConfig:
                                                                         # whether to use avg across depths as starting point for layer fits
                                                                         # when not fitting layer-specific prfs, this parameter is meaningless
                                                                         # as prf runs are projected to the gm surface and fitting is done there (only once)
-        self.fit_css        = class_section.get('fit_css', False)       # boolean
-                                                                        # whether or not to fit css model
 
 
         # size of grid for pRF mapping initial grid search
@@ -207,7 +205,7 @@ class PrfMappingConfig:
         self.logger.info('Selected reference aperture: '+self.reference_aperture)
                                                                                                                                     
 
-        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.fit_css, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture
+        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture
 
 
     def _get_screen_dimensions(self):

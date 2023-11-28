@@ -104,7 +104,6 @@ class PrfFitting:
         self.fit_hrf                    = prf_config.fit_hrf
         self.start_from_avg             = prf_config.start_from_avg
         self.which_model                = prf_config.which_model
-        self.fit_css                    = prf_config.fit_css
 
         # Input parameters of Iso2DGaussianModel
         self.hrf                        = prf_config.hrf
@@ -451,7 +450,7 @@ class PrfFitting:
                     self.prfpy_output_config[aperture_type]['gf_dog_avg'] = \
                                     DoG_Iso2DGaussianFitter(data=data, 
                                                         model=self.prfpy_output_config[aperture_type]['gg_dog_avg'], 
-                                                        n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf, fit_css=self.fit_css,
+                                                        n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf,
                                                         previous_gaussian_fitter=previous_gaussian_fitter)
                     # Fit model: 
                     # grid fit
@@ -522,7 +521,7 @@ class PrfFitting:
                         self.prfpy_output_config[aperture_type]['gf_dog_per_depth'][depth] = \
                                             DoG_Iso2DGaussianFitter(data=data, 
                                                         model=self.prfpy_output_config[aperture_type]['gg_dog_avg'], 
-                                                        n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf, fit_css=self.fit_css,
+                                                        n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf,
                                                         previous_gaussian_fitter=previous_gaussian_fitter)
                         # Fit model: grid fit
                         self.logger.info('Grid fit')
