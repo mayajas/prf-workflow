@@ -197,8 +197,6 @@ class PrfFitting:
             elif self.which_model == 'DoG':
                 # fit DoG to avg surface
                 self.logger.info('%%%%%%%%% Fitting DoG model on average surface %%%%%%%%%')
-                self.logger.info('On 30 cpus-per-task, 10G mem, with fit_hrf=True this takes about 16 hours...')
-                self.logger.info('On 30 cpus-per-task, 10G mem, with fit_hrf=False this takes about 4.81 hours...')
                 self._fit_dog(which_surf='avg')
 
                 # then extract pRF parameters
@@ -207,8 +205,6 @@ class PrfFitting:
 
                 # then fit DoG to each depth
                 self.logger.info('%%%%%%%%% Fitting DoG model across depths %%%%%%%%%')
-                self.logger.info('On 20 cpus-per-task, 10G mem, with fit_hrf=False, this takes about 9.4 hours per surface')
-                self.logger.info('On 30 cpus-per-task, 10G mem, with fit_hrf=False, this takes about 6.35 hours per surface')
                 self._fit_dog(which_surf='depths')
 
                 # then extract pRF parameters
@@ -455,7 +451,7 @@ class PrfFitting:
                     self.prfpy_output_config[aperture_type]['gf_dog_avg'] = \
                                     DoG_Iso2DGaussianFitter(data=data, 
                                                         model=self.prfpy_output_config[aperture_type]['gg_dog_avg'], 
-                                                        n_jobs=self.n_procs, fit_hrf=self.fit_hrf, fit_css=self.fit_css,
+                                                        n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf, fit_css=self.fit_css,
                                                         previous_gaussian_fitter=previous_gaussian_fitter)
                     # Fit model: 
                     # grid fit
@@ -526,7 +522,7 @@ class PrfFitting:
                         self.prfpy_output_config[aperture_type]['gf_dog_per_depth'][depth] = \
                                             DoG_Iso2DGaussianFitter(data=data, 
                                                         model=self.prfpy_output_config[aperture_type]['gg_dog_avg'], 
-                                                        n_jobs=self.n_procs, fit_hrf=self.fit_hrf, fit_css=self.fit_css,
+                                                        n_jobs=self.n_procs, use_previous_gaussian_fitter_hrf=self.fit_hrf, fit_css=self.fit_css,
                                                         previous_gaussian_fitter=previous_gaussian_fitter)
                         # Fit model: grid fit
                         self.logger.info('Grid fit')
@@ -663,7 +659,6 @@ class PrfFitting:
                         prf_params[aperture_type]['srf_size']=self.prfpy_output_config[aperture_type]['gf_dog_avg'].iterative_search_params[:,6]
 
                         if self.fit_hrf:
-                            # TODO: make sure these are the correct indices!!!
                             prf_params[aperture_type]['hrf_1']=self.prfpy_output_config[aperture_type]['gf_dog_avg'].iterative_search_params[:,7]
                             prf_params[aperture_type]['hrf_2']=self.prfpy_output_config[aperture_type]['gf_dog_avg'].iterative_search_params[:,8]
                         else:

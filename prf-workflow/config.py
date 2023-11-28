@@ -58,7 +58,6 @@ class ProjectConfig:
 
         return self.subject_list, self.hem_list, self.n_surfs, self.logger_dir
 
-
 class DirConfig:
     def __init__(self, config_file, project_config, logger):
         self.subject_id     = project_config.subject_id
@@ -376,7 +375,7 @@ class MriConfig:
             equi_surf_fn_list = []
             for depth in range(self.n_surfs):         
                 equi_surf_fn_list.append(self.equivol_fn+'{}.pial'.format(str(float(depth)/(self.n_surfs-1))))
-            equi_surf_fn_list.reverse() # reverse order of surfaces so that pial is first
+            equi_surf_fn_list.reverse() # reverse order of surfaces so that wm (lh.equi1.0.pial) is first
         else:
             equi_surf_fn_list = None
 
