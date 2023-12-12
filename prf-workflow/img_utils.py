@@ -119,7 +119,7 @@ class SurfaceProject:
         if self.n_surfs > 1:
             projection_surface     = self.mri_config.equi_surf_fn_list[0]
         else:
-            projection_surface     = 'wm'
+            projection_surface     = 'white'
         out_file    = self.mri_config.meanFunc_mgh_fn
         if not os.path.exists(out_file):
             logger.info('Surface-projecting mean functional...')
@@ -148,7 +148,7 @@ class SurfaceProject:
                     if self.n_surfs > 1:
                         projection_surface = self.mri_config.equi_surf_fn_list[depth]
                     elif depth == 0 and self.n_surfs == 1:
-                        projection_surface = 'wm'
+                        projection_surface = 'white'
                     out_file = config['mgh_fn_list'][run][depth]
                     if not os.path.exists(out_file):
                         logger.info('Source file: {}'.format(source_file))

@@ -1,0 +1,61 @@
+{
+    "ProjectConfig": {
+        "subject_list": ["sub-01","sub-02","sub-03","sub-04"],
+        "hem_list": ["lh", "rh"],
+        "n_surfs": 1,
+        "logger_dir": "/path_to_log_files"
+    },
+    "DirConfig": {
+        "FS_dir": "/SUBJECTS_DIR/directory_above_subject_dirs",
+        "output_dir": "/output_directory",
+        "apertures_dir": "/path_to_aperture_mat_files",
+        "surface_tools_dir": "/path_to/surface_tools/equivolumetric_surfaces"
+    },
+    "PrfMappingConfig": { 
+        "screen_height_cm": 19.26,
+        "screen_distance_cm": 137.0,
+        "which_model": "Iso",
+        "avg_runs": true,
+        "fit_hrf": false,
+        "start_from_avg": true,
+        "grid_nr": 30,
+        "y_coord_cutoff": -25,
+        "verbose": true,
+        "hrf": null,
+        "filter_predictions": false,
+        "filter_type": "sg",
+        "filter_params": {
+            "window_length": 201,
+            "polyorder": 3
+        },
+        "normalize_RFs": false,
+        "rsq_thresh_itfit": 0.0005,
+        "rsq_thresh_viz": 0.01,
+        "reference_aperture": "bar"
+    },
+    "MriConfig": {
+        "TR": 2.0,
+        "equivol_fn": "equi",
+        "meanFunc_nii_fn": "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/reg_meanFunc.nii",
+        "prf_run_config": {
+            "bar": {
+                "n_runs": 4,
+                "ap_fn": "stimulus_bar.mat",
+                "nii_fn_list": ["/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-01_sess_nr_0_sess_nslices_68/reg_bar1.nii",
+                                "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-02_sess_nr_1_sess_nslices_68/reg_bar2.nii",
+                                "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-03_sess_nr_2_sess_nslices_68/reg_bar3.nii",
+                                "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-04_sess_nr_3_sess_nslices_68/reg_bar4.nii"
+                            ]
+            }
+        }
+    },
+    "DataCleanConfig":  {
+        "detrend": true,
+        "standardize": "zscore",
+        "high_pass": 0.01,
+        "low_pass": 0.1,
+        "filter": "butterworth",
+        "confounds": null
+    }
+  }
+  
