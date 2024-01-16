@@ -817,18 +817,18 @@ class PrfFitting:
             unmask_ecc[condition]              = np.nan
             
             # set nans to 0
-            unmask_x[np.isnan(unmask_x)]         = 0.
-            unmask_y[np.isnan(unmask_y)]         = 0.
-            unmask_prf_size[np.isnan(unmask_prf_size)] = 0.
-            unmask_prf_amp[np.isnan(unmask_prf_amp)] = 0.
-            unmask_bold_baseline[np.isnan(unmask_bold_baseline)] = 0.
-            unmask_srf_amp[np.isnan(unmask_srf_amp)] = 0.
-            unmask_srf_size[np.isnan(unmask_srf_size)] = 0.
-            unmask_hrf_1[np.isnan(unmask_hrf_1)] = 0.
-            unmask_hrf_2[np.isnan(unmask_hrf_2)] = 0.
-            unmask_rsq[np.isnan(unmask_rsq)]     = 0.
-            unmask_polar[np.isnan(unmask_polar)] = 0.
-            unmask_ecc[np.isnan(unmask_ecc)]     = 0.
+            unmask_x[np.isnan(unmask_x)]                            = 0.
+            unmask_y[np.isnan(unmask_y)]                            = 0.
+            unmask_prf_size[np.isnan(unmask_prf_size)]              = 0.
+            unmask_prf_amp[np.isnan(unmask_prf_amp)]                = 0.
+            unmask_bold_baseline[np.isnan(unmask_bold_baseline)]    = 0.
+            unmask_srf_amp[np.isnan(unmask_srf_amp)]                = 0.
+            unmask_srf_size[np.isnan(unmask_srf_size)]              = 0.
+            unmask_hrf_1[np.isnan(unmask_hrf_1)]                    = 0.
+            unmask_hrf_2[np.isnan(unmask_hrf_2)]                    = 0.
+            unmask_rsq[np.isnan(unmask_rsq)]                        = 0.
+            unmask_polar[np.isnan(unmask_polar)]                    = 0.
+            unmask_ecc[np.isnan(unmask_ecc)]                        = 0.
 
             # Save maps to .mgh files for manual delineations
             meanFunc_mgh_nib = nib.freesurfer.mghformat.load(self.meanFunc_mgh_fn)
