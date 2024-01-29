@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from logger import setup_logger
-from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfMappingConfig, DataCleanConfig
+from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfMappingConfig, DataCleanConfig, CfModelingConfig
 from img_utils import EquivolumetricSurfaces, SurfaceProject, CleanInputData
 from prfpy_interface import PrfpyStimulus, PrfFitting
 
@@ -46,9 +46,9 @@ def main(config_file,sub_idx,hem_idx):
         ## Get data cleaning info
         data_clean_config = DataCleanConfig(config_file, mri_config)
 
-        # ## Get CF mapping info (if applicable)
-        # if project_config.do_cf_modeling:
-        #     cfm_config = CfModelingConfig(config_file, dir_config, project_config, logger)
+        ## Get CF mapping info (if applicable)
+        if project_config.do_cf_modeling:
+            cfm_config = CfModelingConfig(config_file, dir_config, project_config, logger)
 
         logger.info('Configuration ready.')
 

@@ -499,3 +499,28 @@ class DataCleanConfig:
         self.confounds = class_section.get('confounds', None)           # could add motion regressors here
 
         return self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds
+    
+
+
+class CfModelingConfig:
+    """
+    This class contains CF modeling-related information.
+    """
+    def __init__(self, config_file, mri_config):
+        self.rois, self.CF_sizes = self._load_config(config_file)
+
+        self.TR = mri_config.TR
+
+    def _load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        # get CFModelingConfig section from config file (if it exists):
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+
+        self.rois = class_section.get('rois', True)
+        self.CF_sizes = class_section.get('CF_sizes', None)      
+
+        return self.rois, self.CF_sizes
