@@ -4,7 +4,7 @@
         "hem_list": ["lh", "rh"],
         "n_surfs": 1,
         "logger_dir": "/path_to_log_files",
-        "do_cf_modeling": false
+        "do_cf_modeling": true
     },
     "DirConfig": {
         "FS_dir": "/SUBJECTS_DIR/directory_above_subject_dirs",
@@ -50,13 +50,9 @@
             }
         }
     },
-    "DataCleanConfig":  {
-        "detrend": true,
-        "standardize": "zscore",
-        "high_pass": 0.01,
-        "low_pass": 0.1,
-        "filter": "butterworth",
-        "confounds": null
+    "CfModelingConfig":  {
+        "rois": ["/output_directory/V1.label", "/output_directory/V2.label", "/output_directory/V3.label"],
+        "CF_sizes": [0.5,1,2,3,4,5,7,10,20,30,40]
     }
   }
   

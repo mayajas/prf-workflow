@@ -1,4 +1,4 @@
-#!~/anaconda3/envs/py38prf/bin/python
+#!~/anaconda3/envs/prf-workflow/bin/python
 ##/usr/bin/env python
 import argparse
 import sys
@@ -45,6 +45,10 @@ def main(config_file,sub_idx,hem_idx):
 
         ## Get data cleaning info
         data_clean_config = DataCleanConfig(config_file, mri_config)
+
+        # ## Get CF mapping info (if applicable)
+        # if project_config.do_cf_modeling:
+        #     cfm_config = CfModelingConfig(config_file, dir_config, project_config, logger)
 
         logger.info('Configuration ready.')
 

@@ -33,7 +33,7 @@ class ProjectConfig:
     
     def __init__(self, config_file, sub_idx, hem_idx):
         # get config from config file
-        self.subject_list, self.hem_list, self.n_surfs, self.logger_dir = self._load_config(config_file)
+        self.subject_list, self.hem_list, self.n_surfs, self.logger_dir, self.do_cf_modeling = self._load_config(config_file)
         
         self.subject_id = self.subject_list[sub_idx]
         self.hemi = self.hem_list[hem_idx]
@@ -55,8 +55,9 @@ class ProjectConfig:
         self.hem_list = class_section.get('hem_list', ['lh', 'rh'])
         self.n_surfs = class_section.get('n_surfs', 1)
         self.logger_dir = class_section.get('logger_dir', None)
+        self.do_cf_modeling = class_section.get('do_cf_modeling', False)
 
-        return self.subject_list, self.hem_list, self.n_surfs, self.logger_dir
+        return self.subject_list, self.hem_list, self.n_surfs, self.logger_dir, self.do_cf_modeling
 
 class DirConfig:
     def __init__(self, config_file, project_config, logger):
@@ -498,37 +499,3 @@ class DataCleanConfig:
         self.confounds = class_section.get('confounds', None)           # could add motion regressors here
 
         return self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds
-    
-
-
-# class CFModelingConfig:
-#     """
-#     This class contains CF modeling-related information.
-#     """
-#     def __init__(self, config_file, mri_config):
-#         self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds = self._load_config(config_file)
-
-#         self.TR = mri_config.TR
-
-#     def _load_config(self, config_file):
-#         with open(config_file) as f:
-#             config_data = json.load(f)
-        
-#         # get CFModelingConfig section from config file (if it exists):
-#         class_name = self.__class__.__name__
-#         class_section = config_data.get(class_name, {})
-
-
-
-
-#         self.detrend = class_section.get('detrend', True)
-#         self.standardize = class_section.get('standardize', 'zscore')
-#         self.low_pass = class_section.get('low_pass', 0.1)              # Low pass filters out high frequency signals from our data: 
-#                                                                         # fMRI signals are slow evolving processes, any high frequency signals 
-#                                                                         # are likely due to noise 
-#         self.high_pass = class_section.get('high_pass', 0.01)           # High pass filters out any very low frequency signals (below 0.01Hz), 
-#                                                                         # which may be due to intrinsic scanner instabilities
-#         self.filter = class_section.get('filter', 'butterworth')        # type of filter to use for bandpass filtering
-#         self.confounds = class_section.get('confounds', None)           # could add motion regressors here
-
-#         return self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds
