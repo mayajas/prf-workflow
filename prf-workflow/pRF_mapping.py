@@ -36,9 +36,18 @@ def main(config_file,sub_idx,hem_idx):
 
         ## Get pRF output filenames
         prf_config = PrfMappingConfig(config_file, dir_config, project_config, logger)
+        
+        if not project_config.do_cf_modeling:
+            ## Get input MRI data
+            mri_config = MriConfig(config_file, project_config, dir_config, prf_config, logger)
 
-        ## Get input MRI data
-        mri_config = MriConfig(config_file, project_config, dir_config, prf_config, logger)
+        else:
+            ## Get CF mapping info (if applicable)
+            cfm_config = CfModelingConfig(config_file, project_config, prf_config, logger)
+
+            ## Get input MRI data
+            mri_config = MriConfig(config_file, project_config, dir_config, prf_config, logger, cfm_config)
+
 
         ## Get aperture info
         StimApertureConfig(dir_config, mri_config, logger)
@@ -46,9 +55,6 @@ def main(config_file,sub_idx,hem_idx):
         ## Get data cleaning info
         data_clean_config = DataCleanConfig(config_file, mri_config)
 
-        ## Get CF mapping info (if applicable)
-        if project_config.do_cf_modeling:
-            cfm_config = CfModelingConfig(config_file, dir_config, project_config, logger)
 
         logger.info('Configuration ready.')
 
@@ -57,24 +63,35 @@ def main(config_file,sub_idx,hem_idx):
         ## Generate equivolumetric surfaces
         EquivolumetricSurfaces(project_config, dir_config, mri_config, logger)
 
-        ## Surface-project functional data (mean functional and pRF runs)
-        SurfaceProject(project_config, dir_config, mri_config, logger)
+        if not project_config.do_cf_modeling:
+            ## Surface-project functional data (mean functional and pRF runs)
+            SurfaceProject(project_config, dir_config, mri_config, logger)
 
-        ## Clean input data
-        CleanInputData(project_config, prf_config, mri_config, data_clean_config, logger)
+            ## Clean input data
+            CleanInputData(project_config, prf_config, mri_config, data_clean_config, logger)
+        else:
+            ## Surface-project functional data (mean functional, pRF runs and CF runs)
+            SurfaceProject(project_config, dir_config, mri_config, logger, cfm_config)
+
+            ## Clean input data
+            CleanInputData(project_config, prf_config, mri_config, data_clean_config, logger, cfm_config)
 
         ###########################################################################################
         ### PRF mapping
-        ## Creating stimulus object
+        ## Create pRF stimulus object
         PrfpyStimulus(dir_config, mri_config,prf_config, logger)
 
         ## Fit pRF model
         PrfFitting(dir_config,mri_config,prf_config,project_config,logger)
 
         ###########################################################################################
-        ### CF mapping
+        ### CF modeling
+        if project_config.do_cf_modeling:
+            ## Create CF stimulus objects
+            pass
 
-
+            ## Fit CF model
+            pass
 
         logger.info("pRF analysis completed successfully")
     except FileNotFoundError as e:
@@ -89,7 +106,7 @@ def main(config_file,sub_idx,hem_idx):
 if __name__ == "__main__":
     
     ### Parse command-line arguments
-    parser = argparse.ArgumentParser(description="Run pRF mapping analysis on Freesurfer surfaces.")
+    parser = argparse.ArgumentParser(description="Run population receptive field (& optionally connective field) model fitting on data projected to cortical surfaces.")
     parser.add_argument("config_file", type=str, help="Path to the configuration file, which contains the image processing and pRF analysis parameters.")
     parser.add_argument("sub_idx", type=int, help="Index of the subject to analyze.")
     parser.add_argument("hem_idx", type=int, choices=[0,1], help="Hemisphere to run the analysis on. This is the index of the current hemisphere from the hemisphere list: ['lh','rh']")

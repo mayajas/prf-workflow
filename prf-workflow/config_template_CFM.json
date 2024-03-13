@@ -48,11 +48,32 @@
                                 "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-04_sess_nr_3_sess_nslices_68/reg_bar4.nii"
                             ]
             }
+        },
+        "cf_run_config": {
+            "rest": {
+                "n_runs": 1,
+                "nii_fn_list": ["/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-rest_run-01_sess_nr_0_sess_nslices_68/reg_rest.nii"]
+            }
         }
     },
     "CfModelingConfig":  {
-        "rois": ["/output_directory/V1.label", "/output_directory/V2.label", "/output_directory/V3.label"],
-        "CF_sizes": [0.5,1,2,3,4,5,7,10,20,30,40]
+        "roi_list": ["/output_directory/V1.label", "/output_directory/V2.label", "/output_directory/V3.label"],
+        "subsurfaces": {
+            "V1-mid":{
+                "roi": 0,
+                "depth": 3
+            },
+            "V2-deep":{
+                "roi": 1,
+                "depth": 0
+            },
+            "V3-deep":{
+                "roi": 2,
+                "depth": 0
+            }
+        },
+        "target_surfs": "all",
+        "CF_sizes": [0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 30, 40]
     }
   }
   

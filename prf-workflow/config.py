@@ -26,9 +26,14 @@ class ProjectConfig:
     This class contains project-specific information.
 
     Attributes:
-        proj_id (str): name of the project
         subject_list (list): list of all subjects in the project
+        subject_id (str): subject to be analyzed
         hem_list (list): list of all hemispheres to be analyzed in the project
+        hemi (str): hemisphere to be analyzed
+        n_surfs (int): number of surfaces to be analyzed
+        logger_dir (str): directory to save the log files
+        do_cf_modeling (bool): whether or not to perform CF modeling
+        n_procs (int): number of cores to use
     """
     
     def __init__(self, config_file, sub_idx, hem_idx):
@@ -60,6 +65,16 @@ class ProjectConfig:
         return self.subject_list, self.hem_list, self.n_surfs, self.logger_dir, self.do_cf_modeling
 
 class DirConfig:
+    """
+    This class contains directory-related information.
+
+    Attributes:
+        FS_dir (str): Freesurfer directory
+        output_dir (str): output directory
+        apertures_dir (str): directory containing stimulus apertures
+        surface_tools_dir (str): directory containing surface tools
+        
+    """
     def __init__(self, config_file, project_config, logger):
         self.subject_id     = project_config.subject_id
         self.logger         = logger
@@ -117,6 +132,31 @@ class DirConfig:
 class PrfMappingConfig:
     """
     This class contains pRF mapping-related information.
+
+    Attributes:
+        output_dir (str): output directory
+        subject_id (str): subject to be analyzed
+        hemi (str): hemisphere to be analyzed
+        n_surfs (int): number of surfaces to be analyzed
+        logger (logging.Logger): logger object
+        screen_height_cm (float): full screen height (cm)
+        screen_distance_cm (float): distance from screen (cm)
+        which_model (str): pRF model type ('Iso' or 'DoG')
+        avg_runs (bool): whether or not to average runs of the same aperture type
+        fit_hrf (bool): whether or not to fit two extra parameters for hrf derivative and dispersion
+        start_from_avg (bool): whether to use avg across depths as starting point for layer fits
+        grid_nr (int): size of grid for pRF mapping initial grid search
+        y_coord_cutoff (int): occipital mask y-coordinate cut-off (including only posterior vertices)
+        verbose (bool): whether to print out progress messages
+        hrf (str, list, or numpy.ndarray): HRF shape for this Model
+        filter_predictions (bool): whether to high-pass filter the predictions
+        filter_type (str): type of filter to use for high-pass filtering
+        filter_params (dict): parameters for high-pass filtering
+        normalize_RFs (bool): whether to normalize the RF volumes
+        rsq_thresh_itfit (float): Rsq threshold for iterative fitting
+        rsq_thresh_viz (float): Rsq threshold for visualization
+        reference_aperture (str): reference aperture to be used for pRF model fit
+
     """
     def __init__(self, config_file, dir_config, project_config, logger):
         self.output_dir = dir_config.output_dir
@@ -208,7 +248,6 @@ class PrfMappingConfig:
 
         return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture
 
-
     def _get_screen_dimensions(self):
         # pRF mapping stimulus dimensions
         self.screen_halfheight_cm = self.screen_height_cm/2
@@ -218,7 +257,6 @@ class PrfMappingConfig:
 
         self.logger.info('Max eccentricity: '+str(self.max_ecc_deg)+' degrees')
     
-   
     def _get_grid_search_params(self):
         # grid search parameters
         size_grid, ecc_grid, polar_grid = self.max_ecc_size * np.linspace(0.25,1,self.grid_nr)**2, \
@@ -233,18 +271,17 @@ class PrfMappingConfig:
         
         return size_grid, ecc_grid, polar_grid, surround_amplitude_grid, surround_size_grid
         
-
-    # prf mapping preferences
     def _get_prf_mapping_config(self):
+        # prf mapping preferences
 
         # model name (based on above preferences)
         if self.n_surfs > 1:
-            model_name     = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)+'_start_from_avg_'+str(self.start_from_avg)+'_n_surfs_'+str(self.n_surfs)
-            prf_output_dir        = opj(self.output_dir,model_name,self.subject_id)
+            model_name          = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)+'_start_from_avg_'+str(self.start_from_avg)+'_n_surfs_'+str(self.n_surfs)
+            prf_output_dir      = opj(self.output_dir,model_name,self.subject_id)
         else:
-            self.start_from_avg = None
+            self.avg_runs       = None
             model_name          = 'prf_'+self.which_model+'_fit_hrf_'+str(self.fit_hrf)
-            prf_output_dir             = opj(self.output_dir,model_name,self.subject_id)
+            prf_output_dir      = opj(self.output_dir,model_name,self.subject_id)
         
         # check if prf_output_dir exists, if not, create it
         if not os.path.exists(prf_output_dir):
@@ -301,29 +338,156 @@ class PrfMappingConfig:
 
         return input_data_dict_fn, output_data_dict_fn, pRF_param_avg_fn, x_map_mgh, y_map_mgh, prf_size_map_mgh, prf_amp_map_mgh, bold_baseline_map_mgh, srf_amp_map_mgh, srf_size_map_mgh, hrf_1_map_mgh, hrf_2_map_mgh, rsq_map_mgh, polar_map_mgh, ecc_map_mgh, pRF_param_per_depth_fn, polar_map_per_depth_mgh, ecc_map_per_depth_mgh, hrf_1_map_per_depth_mgh, hrf_2_map_per_depth_mgh
 
+class CfModelingConfig:
+    """
+    This class contains CF modeling-related information.
+
+    Attributes:
+        roi_list (list): list of source regions
+        subsurfaces (dict): dictionary containing info about sub-surfaces
+        target_surfs (list or string): list of target surfaces or the string "all"
+        CF_sizes (list): list of CF sizes
+    """
+    def __init__(self, config_file, project_config, prf_config, logger):
+        self.n_surfs        = project_config.n_surfs
+        self.logger         = logger
+        self.prf_output_dir = prf_config.prf_output_dir
+
+        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes = self._load_config(config_file)
+
+        self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn = self._get_cf_output_fns()
+
+    def _load_config(self, config_file):
+        with open(config_file) as f:
+            config_data = json.load(f)
+        
+        # get CFModelingConfig section from config file (if it exists):
+        class_name = self.__class__.__name__
+        class_section = config_data.get(class_name, {})
+
+
+        self.roi_list = class_section.get('roi_list', None)
+        # check that roi_list isn't empty
+        if not self.roi_list:
+            self.logger.error('List of source regions (roi_list) is empty. Please check the configuration file.')
+            sys.exit(1)
+
+        # check that all files in list of roi_list exist
+        if self.roi_list:
+            for roi in self.roi_list:
+                if not os.path.exists(roi):
+                    self.logger.error('ROI file does not exist: '+roi)
+                    sys.exit(1)
+
+        self.subsurfaces = class_section.get('subsurfaces', None)
+        # check that subsurfaces is not empty
+        if not self.subsurfaces:
+            self.logger.error('Subsurfaces dictionary (subsurfaces) is empty. Please check the configuration file.')
+            sys.exit(1)
+        else:
+            # check that each element in the dictionary contains a "roi" and "depth" key and that both are ints
+            for key, value in self.subsurfaces.items():
+                if not isinstance(value, dict):
+                    self.logger.error('Value for '+key+' subsurface is not a dictionary. Please check the configuration file.')
+                    sys.exit(1)
+                if not value.get('roi', None) or not value.get('depth', None):
+                    self.logger.error('Value for '+key+' subsurface does not contain a "roi" or "depth" key. Please check the configuration file.')
+                    sys.exit(1)
+                if not isinstance(value['roi'], int) or not isinstance(value['depth'], int):
+                    self.logger.error('Value for '+key+' subsurface contains a "roi" or "depth" key that is not an integer. Please check the configuration file.')
+                    sys.exit(1)
+                # check that each "roi" key is smaller than or equal to the length of roi_list
+                if value['roi'] > len(self.roi_list)-1:
+                    self.logger.error('Value for '+key+' subsurface contains a "roi" key that is greater than the length of roi_list. Please check the configuration file.')
+                    sys.exit(1)
+                # and that each "depth" key is smaller than or equal to n_surfs-1
+                if value['depth'] > self.n_surfs-1:
+                    self.logger.error('Value for '+key+' subsurface contains a "depth" key that is greater than n_surfs-1. Please check the configuration file.')
+                    sys.exit(1)
+        
+        self.target_surfs = class_section.get('target_surfs', None)
+        # check that target_surfs is either a list of ints or the string "all"
+        if not isinstance(self.target_surfs, list) and self.target_surfs != "all":
+            self.logger.error('target_surfs must be either a list of integers (corresponding to cortical depths) or the string "all". Please check the configuration file.')
+            sys.exit(1)
+        # if target_surfs is a list of ints, check that none of the ints are greater than n_surfs
+        if isinstance(self.target_surfs, list):
+            for surf in self.target_surfs:
+                if surf > self.n_surfs-1:
+                    self.logger.error('current surf: '+str(surf))
+                    self.logger.error('Value in list of target surfaces (target_surfs) cannot be greater than n_surfs-1. Please check the configuration file.')
+                    sys.exit(1)
+                # also check that none of the ints are smaller than 0
+                if surf < 0:
+                    self.logger.error('Value in list of target surfaces (target_surfs) cannot be smaller than 0. Please check the configuration file.')
+                    sys.exit(1)
+                
+        
+        self.CF_sizes = class_section.get('CF_sizes', None)
+        # check that CF_sizes is not empty
+        if not self.CF_sizes:
+            self.logger.error('CF_sizes is empty. Please check the configuration file.')
+            sys.exit(1)    
+
+        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes
+    
+    def _get_cf_output_fns(self):
+
+        cfm_output_dir = opj(self.prf_output_dir,'cfm')
+
+        # data dictionary files
+        input_data_dict_fn      = opj(cfm_output_dir,self.hemi+'_input_data.pckl')
+        output_data_dict_fn     = opj(cfm_output_dir,self.hemi+'_output_data.pckl')
+
+        return cfm_output_dir, input_data_dict_fn, output_data_dict_fn
+
 class MriConfig:
     """
     This class contains MRI acquisition-related information.
+
+    Attributes:
+        TR (float): repetition time
+        equivol_fn (str): equivolumetric surface filename prefix
+        meanFunc_nii_fn (str): mean functional nitfti filepath and name
+        prf_run_config (dict): dictionary containing info about pRF runs
+        cf_run_config (dict): dictionary containing info about CFM runs
+        gm_surf_fn (str): Freesurfer gray matter surface filename
+        wm_surf_fn (str): Freesurfer white matter surface filename
+        inflated_surf_fn (str): Freesurfer inflated surface filename
+        equi_surf_fn_list (list): list of equivolumetric surface filenames
+        meanFunc_mgh_fn (str): surface-projected mean functional run filename
+        occ_mask_fn (str): occipital mask filename
     """
 
-    def __init__(self, config_file, project_config, dir_config, prf_config, logger):
+    def __init__(self, config_file, project_config, dir_config, prf_config, logger, cfm_config=None):
         self.prf_output_dir     = prf_config.prf_output_dir
         self.reference_aperture = prf_config.reference_aperture
         self.FS_dir             = dir_config.FS_dir
         self.subject_id         = project_config.subject_id
         self.hemi               = project_config.hemi
         self.n_surfs            = project_config.n_surfs
+        self.do_cf_modeling     = project_config.do_cf_modeling
         self.logger             = logger
 
         # get config from config file
-        self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
+        if self.do_cf_modeling and cfm_config is not None:
+            self.cfm_config = cfm_config
+            self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config = self._load_config(config_file)
+        else:
+            self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
+            self.cf_run_config = None
 
         # get input mri filenames
-        self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
+        self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.cort_label_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
 
         # get info about pRF runs (apertures, nr sessions per run, filenames of projected runs)
         self.prf_run_config, self.prfpy_output_config = self._get_prf_run_list()
 
+        # get info about CFM runs (nr sessions per run, filenames of projected runs)
+        if self.do_cf_modeling and cfm_config is not None:
+            self.cf_run_config, self.cfm_output_config = self._get_cf_run_config()
+        else:
+            self.cf_run_config, self.cfm_output_config = None, None
 
     def _load_config(self, config_file):
         with open(config_file) as f:
@@ -340,7 +504,7 @@ class MriConfig:
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
         self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
         self.prf_run_config  = class_section.get('prf_run_config',  None) # dictionary containing info about pRF runs
-        
+
         # Check that mean functional and pRF nifti files exist
         if not os.path.exists(self.meanFunc_nii_fn):
             self.logger.error('Mean functional image does not exist under this address: '+ self.meanFunc_nii_fn)
@@ -361,13 +525,30 @@ class MriConfig:
             self.logger.error('The selected reference aperture ('+self.reference_aperture+') is not present in the list of all stimulus apertures.')
             sys.exit(1)
 
-        return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config
+        # Load CFM config (if applicable)
+        if self.do_cf_modeling:
+            self.cf_run_config  = class_section.get('cf_run_config',  None) # dictionary containing info about CFM runs
+
+            # Check that CFM nifti files exist  
+            for aperture_type, config in self.cf_run_config.items():
+                for run in range(config['n_runs']):
+                    if not os.path.exists(config['nii_fn_list'][run]):
+                        self.logger.error('CFM '+aperture_type+' run '+str(run)+' does not exist under this address: '+config['nii_fn_list'][run])
+                        sys.exit(1)
+                    else:
+                        self.logger.info('CFM '+aperture_type+' run '+str(run)+': '+config['nii_fn_list'][run]) 
+
+        if self.do_cf_modeling:
+            return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config
+        else:
+            return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config
     
     def _get_mri_fns(self):
         # Freesurfer mesh filenames
         gm_surf_fn          = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.pial')
         wm_surf_fn          = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.white')
         inflated_surf_fn    = opj(self.FS_dir,self.subject_id,'surf',self.hemi+'.inflated')
+        cort_label_fn       = opj(self.FS_dir,self.subject_id,'label',self.hemi+'.cortex.label')
 
         # equivolumetric surface output filenames
         if self.n_surfs > 1:
@@ -384,7 +565,7 @@ class MriConfig:
         # occipital mask filename
         occ_mask_fn             = opj(self.prf_output_dir,self.hemi+'_occ_mask.pckl')
 
-        return gm_surf_fn, wm_surf_fn, inflated_surf_fn, equi_surf_fn_list, meanFunc_mgh_fn, occ_mask_fn
+        return gm_surf_fn, wm_surf_fn, inflated_surf_fn, cort_label_fn, equi_surf_fn_list, meanFunc_mgh_fn, occ_mask_fn
     
     def _get_prf_run_list(self):
         for aperture_type, config in self.prf_run_config.items():
@@ -432,10 +613,45 @@ class MriConfig:
         }
 
         return self.prf_run_config, prfpy_output_config
+    
+    def _get_cf_run_config(self):
+        for aperture_type, config in self.cf_run_config.items():
+            mgh_fn_list = []
+            for run in range(config['n_runs']):
+                mgh_fn = []
+                for depth in range(self.n_surfs if self.n_surfs > 1 else 1):
+                    mgh_fn.append(opj(self.prf_output_dir, f"{self.hemi}.equi{depth}.{aperture_type}{run + 1}.mgh"))
+                mgh_fn_list.append(mgh_fn)
+
+            config['mgh_fn_list'] = mgh_fn_list
+
+
+        cfm_output_config = {
+            key: {
+                'roi_label': self.cfm_config.roi_list[self.cfm_config.subsurfaces[key]['roi']],
+                'subsurface': [],
+                'depth': self.cfm_config.subsurfaces[key]['depth'],
+                'surf_fn': opj(self.FS_dir, 'surf', self.hemi+'.'+self.equi_surf_fn_list[self.cfm_config.subsurfaces[key]['depth']]),
+                'surf': [],
+                'dist': [],
+                'stim': [],
+                'model': [],
+                'gf': [],
+                'is_gf': []
+            } for key in self.cfm_config.subsurfaces
+        }
+
+        return self.cf_run_config, cfm_output_config
 
 class StimApertureConfig:
     """
     This class loads the stimulus apertures into the prf_run_config dictionary.
+
+    Attributes:
+        prf_run_config (dict): dictionary containing info about pRF runs
+        apertures_dir (str): directory containing stimulus apertures
+        logger (logging.Logger): logger object
+
     """
 
     def __init__(self, dir_config, mri_config, logger):
@@ -499,28 +715,3 @@ class DataCleanConfig:
         self.confounds = class_section.get('confounds', None)           # could add motion regressors here
 
         return self.detrend, self.standardize, self.low_pass, self.high_pass, self.filter, self.confounds
-    
-
-
-class CfModelingConfig:
-    """
-    This class contains CF modeling-related information.
-    """
-    def __init__(self, config_file, mri_config):
-        self.rois, self.CF_sizes = self._load_config(config_file)
-
-        self.TR = mri_config.TR
-
-    def _load_config(self, config_file):
-        with open(config_file) as f:
-            config_data = json.load(f)
-        
-        # get CFModelingConfig section from config file (if it exists):
-        class_name = self.__class__.__name__
-        class_section = config_data.get(class_name, {})
-
-
-        self.rois = class_section.get('rois', True)
-        self.CF_sizes = class_section.get('CF_sizes', None)      
-
-        return self.rois, self.CF_sizes

@@ -2,6 +2,7 @@
 from fsl.data.freesurfer import loadVertexDataFile
 from nilearn import surface, signal
 import nipype.interfaces.freesurfer as fs
+import nibabel as nib
 import numpy as np
 import os
 from os.path import join as opj
@@ -105,12 +106,14 @@ class SurfaceProject:
     This class contains functions that are used to surface-project functional data.
     """
 
-    def __init__(self, project_config, dir_config, mri_config, logger):
+    def __init__(self, project_config, dir_config, mri_config, logger, cfm_config=None):
         self.subject_id     = project_config.subject_id
         self.hemi           = project_config.hemi
         self.dir_config     = dir_config
         self.mri_config     = mri_config
         self.prf_run_config = mri_config.prf_run_config
+        if project_config.do_cf_modeling:
+            self.cfm_run_config = mri_config.cfm_run_config
         self.n_surfs        = project_config.n_surfs
         self.logger         = logger
 
@@ -163,7 +166,35 @@ class SurfaceProject:
                             sys.exit(1)
                     else:
                         logger.info('run {} of {} for depth {} already surface-projected.'.format(run+1,config['n_runs'],depth+1))
-                        
+
+        ## Surface-project CF mapping runs (if applicable)
+        if project_config.do_cf_modeling:
+            logger.info('Surface-projecting CF mapping runs...')
+            self.cfm_run_config = mri_config.cfm_run_config
+            for aperture_type, config in cfm_config.cfm_run_config.items():
+                logger.info('Aperture type: {}'.format(aperture_type))
+                for run in range(0,config['n_runs']):
+                    for depth in range(0,self.n_surfs):
+                        source_file = config['nii_fn_list'][run]
+                        if self.n_surfs > 1:
+                            projection_surface = self.mri_config.equi_surf_fn_list[depth]
+                        elif depth == 0 and self.n_surfs == 1:
+                            projection_surface = 'white'
+                        out_file = config['mgh_fn_list'][run][depth]
+                        if not os.path.exists(out_file):
+                            logger.info('Source file: {}'.format(source_file))
+                            logger.info('Surface: {}'.format(projection_surface))
+                            logger.info('Output file: {}'.format(out_file))
+                            try:
+                                self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,projection_surface,out_file)
+                                logger.info('Surface-projecting CF mapping run {} of {} for {} aperture type and {} depth completed.'.format(run+1,config['n_runs'],aperture_type,depth+1))
+                            except Exception as e:
+                                logger.error(f"Error: {str(e)}")
+                                logger.exception("Full exception traceback:")
+                                sys.exit(1)
+                        else:
+                            logger.info('run {} of {} for depth {} already surface-projected.'.format(run+1,config['n_runs'],depth+1))                
+
     def _surface_project(self,FS_dir,subject_id,hemi,source_file,projection_surface,out_file):    
         # set environment FS subjects dir
         os.environ["SUBJECTS_DIR"] = FS_dir
@@ -184,22 +215,33 @@ class CleanInputData:
     """
     This class contains functions that are used to clean input data.
     """
-    def __init__(self, project_config, prf_config, mri_config, data_clean_config, logger):
+    def __init__(self, project_config, prf_config, mri_config, data_clean_config, logger, cfm_config=None):
         self.n_surfs            = project_config.n_surfs
         self.occ_mask_fn        = mri_config.occ_mask_fn
         self.prf_run_config     = mri_config.prf_run_config
+        self.prf_config         = prf_config
+        if project_config.do_cf_modeling:
+            self.cfm_run_config = mri_config.cfm_run_config
+            self.cfm_config     = cfm_config
         self.y_coord_cutoff     = prf_config.y_coord_cutoff
-        self.input_data_dict_fn = prf_config.input_data_dict_fn
         self.logger             = logger
         
         ## Load preprocessed surface meshes
         logger.info('Loading GM/WM surface meshes...')
         self.gm_mesh        = surface.load_surf_mesh(mri_config.gm_surf_fn) 
-        self.wm_mesh        = surface.load_surf_mesh(mri_config.wm_surf_fn) 
+        self.wm_mesh        = surface.load_surf_mesh(mri_config.wm_surf_fn)
 
-        ## Load surface-projected data (mean functional and pRF runs across all apertures, runs, depths)
+        ## Load cortical label 
+        logger.info('Loading cortical label...')
+        self.cort_label     = nib.freesurfer.read_label(mri_config.cort_label_fn)
+
+        ## Load surface-projected data
         logger.info('Loading surface-projected data...')
+        
+        # mean functional
         self.meanFunc_mgh   = loadVertexDataFile(mri_config.meanFunc_mgh_fn)
+        
+        # pRF runs across all apertures, runs, depths
         for aperture_type, config in self.prf_run_config.items():
             config['raw_data'] = {}  # Add a new key 'raw_data' for each aperture type
             for run in range(0,config['n_runs']):
@@ -207,14 +249,21 @@ class CleanInputData:
                 for depth in range(0,self.n_surfs):
                     mgh_fn = config['mgh_fn_list'][run][depth]
                     config['raw_data'][run][depth] = loadVertexDataFile(mgh_fn)
+        
+        # CF runs (if applicable) across all apertures, runs, depths
+        if project_config.do_cf_modeling:
+            for aperture_type, config in self.cfm_run_config.items():
+                config['raw_data'] = {}
+                for run in range(0,config['n_runs']):
+                    config['raw_data'][run] = {}
+                    for depth in range(0,self.n_surfs):
+                        mgh_fn = config['mgh_fn_list'][run][depth]
+                        config['raw_data'][run][depth] = loadVertexDataFile(mgh_fn)
 
         ## Make occipital mask
         self.occ_mask, self.n_vtx = self._make_occipital_mask()
 
-        ## Clean input data
-        # - apply occipital mask to constrain analysis to occipital pole
-        # - detrend, standardize, and bandpass filter each functional pRF run
-        # - average pRF runs
+        ## Clean input data - for each pRF run:
         self.detrend        = data_clean_config.detrend
         self.standardize    = data_clean_config.standardize
         self.low_pass       = data_clean_config.low_pass
@@ -223,7 +272,11 @@ class CleanInputData:
         self.filter         = data_clean_config.filter
         self.confounds      = data_clean_config.confounds
 
-        mri_config.prf_run_config = self._clean_data()
+        mri_config.prf_run_config = self._clean_data_prf()
+
+        ## Clean input data - for each CF run (if applicable):
+        if cfm_config is not None:
+            mri_config.cfm_run_config = self._clean_data_cfm()
 
     def _make_occipital_mask(self):
         """
@@ -259,10 +312,13 @@ class CleanInputData:
 
         return occ_mask, n_vtx
     
-    def _clean_data(self):
-        
-        if not os.path.exists(self.input_data_dict_fn):
-            self.logger.info('Cleaning input data...')
+    def _clean_data_prf(self):
+        """Clean pRF data.
+        Apply occipital mask to constrain analysis to occipital pole.
+        Detrend, standardize, and bandpass filter each functional pRF run.
+        Average over runs."""
+        if not os.path.exists(self.prf_config.input_data_dict_fn):
+            self.logger.info('Cleaning pRF input data...')
             for aperture_type, config in self.prf_run_config.items():
                 self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
                 config['filtered_data'] = {}  # Add a new key 'filtered_data' for each aperture type
@@ -303,12 +359,12 @@ class CleanInputData:
 
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
-            with open(self.input_data_dict_fn, 'wb') as pickle_file:
+            with open(self.prf_config.input_data_dict_fn, 'wb') as pickle_file:
                 pickle.dump(self.prf_run_config, pickle_file)
         else:
-            self.logger.info('Cleaned data already exists at {}'.format(self.input_data_dict_fn))
+            self.logger.info('Cleaned data already exists at {}'.format(self.prf_config.input_data_dict_fn))
             self.logger.info('Loading cleaned data...')
-            with open(self.input_data_dict_fn, 'rb') as pickle_file:
+            with open(self.prf_config.input_data_dict_fn, 'rb') as pickle_file:
                 self.prf_run_config = pickle.load(pickle_file)
 
             # Check if the cleaned data matches the dimensions of the occipital mask
@@ -332,3 +388,99 @@ class CleanInputData:
 
         return self.prf_run_config
         
+    def _clean_data_cfm(self):
+        """Clean CF data.
+        Apply occipital mask to constrain analysis to occipital pole.
+        Detrend, standardize, and bandpass filter each functional CF run.
+        Average over runs."""
+        if not os.path.exists(self.cfm_config.input_data_dict_fn):
+            self.logger.info('Cleaning CF input data...')
+            for aperture_type, config in self.cfm_run_config.items():
+                self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
+
+                # Check if the current aperture type is present in the prf_run_config and if it has the same number of runs
+                if aperture_type in self.prf_run_config and config['n_runs'] == self.prf_run_config[aperture_type]['n_runs']:
+                    self.logger.info('Aperture type {} is present in the prf_run_config.'.format(aperture_type))
+
+                    # Copy the preprocessed data from the prf_run_config
+                    self.logger.info('Copying preprocessed data from the prf_run_config...')
+                    config['masked_data'] = self.prf_run_config[aperture_type]['masked_data']
+                    config['filtered_data'] = self.prf_run_config[aperture_type]['filtered_data']
+                    config['preproc_data_per_depth'] = self.prf_run_config[aperture_type]['preproc_data_per_depth']
+                    config['preproc_data_concatenated_depths'] = np.concatenate(config['preproc_data_per_depth'],axis=1)
+                
+                else:
+                    # if aperture_type is not in prf_run_config
+                    if aperture_type not in self.prf_run_config:
+                        self.logger.info('Aperture type {} is not present in the prf_run_config.'.format(aperture_type))
+                    if config['n_runs'] != self.prf_run_config[aperture_type]['n_runs']:
+                        self.logger.error('Number of runs for {} aperture type in prf_run_config does not match the number of runs for {} aperture type in the cfm_run_config.'.format(aperture_type,aperture_type))
+                    
+                    self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
+                    config['filtered_data'] = {}
+                    config['masked_data'] = {}
+                    config['preproc_data_per_depth'] = {}
+                    config['preproc_data_concatenated_depths'] = {}
+                    
+                    for run in range(0,config['n_runs']):
+                        self.logger.info('Run {} of {}...'.format(run+1,config['n_runs']))
+                        config['masked_data'][run] = {}
+                        config['filtered_data'][run] = {}
+                        for depth in range(0,self.n_surfs):
+                            # Apply occipital mask to constrain analysis to occipital pole
+                            self.logger.info('Applying occipital mask to constrain analysis to occipital pole... Depth: {}'.format(depth))
+                            config['masked_data'][run][depth] = config['raw_data'][run][depth][self.occ_mask].T
+
+                            # Detrend, standardize, and bandpass filter each functional CF run
+                            self.logger.info('Detrending, standardizing, and bandpass filtering each functional CF run... Depth: {}'.format(depth))
+                            config['filtered_data'][run][depth] = signal.clean(config['masked_data'][run][depth],
+                                                                            confounds=self.confounds,
+                                                                            detrend=self.detrend, standardize=self.standardize,
+                                                                            filter=self.filter, low_pass=self.low_pass, high_pass=self.high_pass,
+                                                                            t_r=self.TR)
+                    
+                    # Average over runs
+                    self.logger.info('Averaging over runs...')
+                    config['preproc_data_per_depth'] = [0] * self.n_surfs
+                    for run in config['filtered_data']:
+                        for depth in range(0,self.n_surfs):
+                            config['preproc_data_per_depth'][depth] += config['filtered_data'][run][depth]
+
+                    for depth in range(0,self.n_surfs):
+                        config['preproc_data_per_depth'][depth] = config['preproc_data_per_depth'][depth].T
+                        config['preproc_data_per_depth'][depth] /= config['n_runs']
+
+                    # Concatenate the preprocessed data across depths
+                    self.logger.info('Concatenating the preprocessed data across depths...')
+                    config['preproc_data_concatenated_depths'] = np.concatenate(config['preproc_data_per_depth'],axis=1)
+                    
+            ## Save cleaned data
+            self.logger.info('Saving cleaned data...')
+            with open(self.cfm_config.input_data_dict_fn, 'wb') as pickle_file:
+                pickle.dump(self.cfm_run_config, pickle_file)
+        else:
+            self.logger.info('Cleaned data already exists at {}'.format(self.cfm_config.input_data_dict_fn))
+            self.logger.info('Loading cleaned data...')
+            with open(self.cfm_config.input_data_dict_fn, 'rb') as pickle_file:
+                self.cfm_run_config = pickle.load(pickle_file)
+
+            # Check if the cleaned data matches the dimensions of the occipital mask
+            for aperture_type, config in self.cfm_run_config.items():
+                for run in range(0,config['n_runs']):
+                    for depth in range(0,self.n_surfs):
+                        if config['masked_data'][run][depth].shape[1] != self.occ_mask.shape[0]:
+                            self.logger.error('Cleaned data does not match the dimensions of the occipital mask.')
+                            self.logger.error('It is suggested to delete the cleaned data dictionary and the occipital mask and rerun the analysis.')
+                            sys.exit(1)
+
+            # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg')
+            for aperture_type, config in self.cfm_run_config.items():
+                for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']:
+                    if key not in config:
+                        self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
+                        self.logger.error('Cleaned data dictionary must have the following keys: {}'.format(['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']))
+                        self.logger.error('Cleaned data dictionary has the following keys: {}'.format(list(config.keys())))
+                        self.logger.error('It is suggested to delete the cleaned data dictionary and rerun the analysis.')
+                        sys.exit(1)
+
+        return self.cfm_run_config

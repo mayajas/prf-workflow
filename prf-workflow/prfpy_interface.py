@@ -861,31 +861,42 @@ class PrfFitting:
 
 
 
+class CfStimulus:
 
-# class CfStimulus:
+    def __init__(self, dir_config, mri_config, prf_config, cfm_config, logger):
+        self.dir_config             = dir_config
 
-#     def __init__(self, dir_config, mri_config, prf_config, logger):
-#         self.dir_config             = dir_config
+        self.prf_run_config         = mri_config.prf_run_config
+        self.prfpy_output_config    = mri_config.prfpy_output_config
+        self.output_data_dict_fn    = prf_config.output_data_dict_fn
 
-#         self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
-#         self.screen_distance_cm     = prf_config.screen_distance_cm
-#         self.TR                     = mri_config.TR
+        self.source_rois            = cfm_config.source_rois
+        self.source_surfs           = cfm_config.source_surfs
+        self.CF_sizes               = cfm_config.CF_sizes
 
-#         self.prf_run_config         = mri_config.prf_run_config
-#         self.prfpy_output_config    = mri_config.prfpy_output_config
-#         self.output_data_dict_fn    = prf_config.output_data_dict_fn
+        self.logger                 = logger
 
-#         self.logger                 = logger
+        # Define source regions
+        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        self.logger.info('Defining CF modeling source regions')
+        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        self._define_source_regions()
         
-#         # Create stimulus object
-#         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-#         self.logger.info('Creating stimulus object')
-#         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-#         mri_config.prfpy_output_config  = self._create_cf_stim_obj()
-#         self.logger.info('Stimulus object created')
+        # Create stimulus object
+        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        self.logger.info('Creating stimulus object')
+        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        mri_config.prfpy_output_config  = self._create_cf_stim_obj()
+        self.logger.info('Stimulus object created')
 
-#     def _create_cf_stim_obj(self):
-#         """
-#         Create a stimulus object for CF modeling.
-#         """
-#         from prfpy.stimulus import CFStimulus
+    def _define_source_regions(self):
+        """
+        Define source regions for CF modeling.
+        """
+
+
+    def _create_cf_stim_obj(self):
+        """
+        Create a stimulus object for CF modeling.
+        """
+        from prfpy.stimulus import CFStimulus
