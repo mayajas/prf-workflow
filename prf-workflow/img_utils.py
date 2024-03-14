@@ -14,6 +14,27 @@ import surfdist as sd
 def is_running_on_slurm():
     return "SLURM_JOB_ID" in os.environ
 
+def translate_indices(original_mask, new_mask):
+    """Used to translate the indices of the ROI mask to indices of the occipital mask"""
+    mapping = {}  # Mapping from original indices to new indices
+    new_indices = []  # Translated indices from the new array
+
+    # Check if new_mask is a subset of original_mask
+    if not set(new_mask).issubset(set(original_mask)):
+        flag_str = 'The ROI mask is not a subset of the occipital mask.'
+    else:
+        flag_str = None
+
+    # Create a mapping between original indices and new indices
+    for i, idx in enumerate(original_mask):
+        mapping[idx] = i
+
+    # Translate indices in the new mask
+    for idx in new_mask:
+        new_indices.append(mapping[idx])
+
+    return new_indices, flag_str
+
 class EquivolumetricSurfaces:
     """
     This class contains functions that are used to generate equivolumetric surfaces.
@@ -485,13 +506,21 @@ class CleanInputData:
     
 class CreateSubsurfaces:
     """This class contains functions that are used to generate the subsurfaces used for connective field modeling."""
-    def __init__(self, mri_config, logger):
-        self.cf_run_config, self.cfm_output_config = mri_config.cf_run_config, mri_config.cfm_output_config
+    def __init__(self, mri_config, cfm_config, logger):
+        self.cf_run_config      = mri_config.cf_run_config
+        self.cfm_output_config  = mri_config.cfm_output_config
+        self.occ_mask_fn        = mri_config.occ_mask_fn
+        self.cfm_config         = cfm_config
         self.logger             = logger
 
         ## Load cortical label
         logger.info('Loading GM/WM surface meshes...')
         self.cort = nib.freesurfer.read_label(mri_config.cort_label_fn) 
+
+        ## Load occipital mask
+        logger.info('Loading occipital mask...')
+        with open(self.occ_mask_fn, 'rb') as pickle_file:
+            [self.occ_mask,_] = pickle.load(pickle_file)
 
         # Create subsurfaces
         self.logger.info('Creating subsurfaces...')
@@ -525,8 +554,17 @@ class CreateSubsurfaces:
 
                 # Get preprocessed timeseries within the given ROI and depth
                 self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
-                config[key]['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][config[key]['depth']][config[key]['subsurface'],]
+                subsurface_indices, flag_str = translate_indices(self.occ_mask,config[key]['subsurface'])
+                if flag_str is not None:
+                    self.logger.error(flag_str)
+                    sys.exit(1)
+                config[key]['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][config[key]['depth']][subsurface_indices,]
         
             self.logger.info('Subsurface for aperture type {} created.'.format(aperture_type))
 
         self.logger.info('All subsurfaces created.')
+
+        ## Save subsurfaces
+        self.logger.info('Saving subsurfaces...')
+        with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+            pickle.dump(self.cfm_output_config, pickle_file)
