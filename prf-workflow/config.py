@@ -73,14 +73,17 @@ class DirConfig:
         output_dir (str): output directory
         apertures_dir (str): directory containing stimulus apertures
         surface_tools_dir (str): directory containing surface tools
-        
+        ROI_dir (str): directory containing ROI labels
     """
     def __init__(self, config_file, project_config, logger):
         self.subject_id     = project_config.subject_id
         self.logger         = logger
 
         # get config from config file
-        self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir = self._load_config(config_file)  
+        if project_config.do_cf_modeling:
+            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir = self._load_config(config_file)
+        else:
+            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir = self._load_config(config_file)  
 
     def _load_config(self, config_file):
         with open(config_file) as f:
@@ -105,6 +108,9 @@ class DirConfig:
         # path to surface tools 
         self.surface_tools_dir = class_section.get('surface_tools_dir', None)
 
+        # path to ROI labels
+        self.ROI_dir = class_section.get('ROI_dir', None)
+
         # check if directories exist, write errors to logger, and return directories
         if not os.path.exists(self.FS_dir):
             self.logger.error('Freesurfer directory does not exist.')
@@ -126,6 +132,11 @@ class DirConfig:
             sys.exit(1)
         else:
             self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
+        if not os.path.exists(self.ROI_dir) and self.project_config.do_cf_modeling:
+                self.logger.error('ROI directory does not exist.')
+                sys.exit(1)
+        else:
+            self.logger.info('ROI directory: ' + self.ROI_dir)
 
         return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir
 
@@ -348,10 +359,11 @@ class CfModelingConfig:
         target_surfs (list or string): list of target surfaces or the string "all"
         CF_sizes (list): list of CF sizes
     """
-    def __init__(self, config_file, project_config, prf_config, logger):
+    def __init__(self, config_file, project_config, dir_config, prf_config, logger):
         self.n_surfs        = project_config.n_surfs
         self.logger         = logger
         self.prf_output_dir = prf_config.prf_output_dir
+        self.ROI_dir        = dir_config.ROI_dir
 
         self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes = self._load_config(config_file)
 
@@ -371,6 +383,9 @@ class CfModelingConfig:
         if not self.roi_list:
             self.logger.error('List of source regions (roi_list) is empty. Please check the configuration file.')
             sys.exit(1)
+        
+        # append path and '.label' extension to each roi in roi_list
+        self.roi_list = [opj(self.ROI_dir, roi+'.label') for roi in self.roi_list]
 
         # check that all files in list of roi_list exist
         if self.roi_list:

@@ -43,7 +43,7 @@ def main(config_file,sub_idx,hem_idx):
 
         else:
             ## Get CF mapping info (if applicable)
-            cfm_config = CfModelingConfig(config_file, project_config, prf_config, logger)
+            cfm_config = CfModelingConfig(config_file, project_config, dir_config, prf_config, logger)
 
             ## Get input MRI data
             mri_config = MriConfig(config_file, project_config, dir_config, prf_config, logger, cfm_config)

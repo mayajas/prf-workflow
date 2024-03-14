@@ -10,7 +10,8 @@
         "FS_dir": "/SUBJECTS_DIR/directory_above_subject_dirs",
         "output_dir": "/output_directory",
         "apertures_dir": "/path_to_aperture_mat_files",
-        "surface_tools_dir": "/path_to/surface_tools/equivolumetric_surfaces"
+        "surface_tools_dir": "/path_to/surface_tools/equivolumetric_surfaces",
+        "ROI_dir": "/path_to_ROI_files"
     },
     "PrfMappingConfig": { 
         "screen_height_cm": 19.26,
@@ -57,7 +58,7 @@
         }
     },
     "CfModelingConfig":  {
-        "roi_list": ["/output_directory/V1.label", "/output_directory/V2.label", "/output_directory/V3.label"],
+        "roi_list": ["V1", "V2", "V3"],
         "subsurfaces": {
             "V1-mid":{
                 "roi": 0,
