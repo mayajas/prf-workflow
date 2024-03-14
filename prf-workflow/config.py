@@ -393,7 +393,7 @@ class CfModelingConfig:
             sys.exit(1)
         
         # append path and '.label' extension to each roi in roi_list
-        self.roi_list = [opj(self.ROI_dir, self.hemi+roi+'.label') for roi in self.roi_list]
+        self.roi_list = [opj(self.ROI_dir, self.hemi+'.'+roi+'.label') for roi in self.roi_list]
 
         # check that all files in list of roi_list exist
         if self.roi_list:
