@@ -695,9 +695,11 @@ class StimApertureConfig:
                     stimulus_config['design_matrix'] = design_matrix
                     self.logger.info(f"Loaded aperture array for {stimulus_type} stimulus type.")
                 except Exception as e:
-                    self.logger.info(f"Error loading aperture file for {stimulus_type} stimulus type: {str(e)}")
+                    self.logger.error(f"Error loading aperture file for {stimulus_type} stimulus type: {str(e)}")
+                    sys.exit(1)
             else:
-                self.logger.info(f"No aperture file specified for {stimulus_type} stimulus type.")
+                self.logger.error(f"No aperture file specified for {stimulus_type} stimulus type.")
+                sys.exit(1)
 
 class DataCleanConfig:
     """
