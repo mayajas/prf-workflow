@@ -113,7 +113,7 @@ class SurfaceProject:
         self.mri_config     = mri_config
         self.prf_run_config = mri_config.prf_run_config
         if project_config.do_cf_modeling:
-            self.cfm_run_config = mri_config.cfm_run_config
+            self.cf_run_config = mri_config.cf_run_config
         self.n_surfs        = project_config.n_surfs
         self.logger         = logger
 
@@ -170,8 +170,8 @@ class SurfaceProject:
         ## Surface-project CF mapping runs (if applicable)
         if project_config.do_cf_modeling:
             logger.info('Surface-projecting CF mapping runs...')
-            self.cfm_run_config = mri_config.cfm_run_config
-            for aperture_type, config in cfm_config.cfm_run_config.items():
+            self.cf_run_config = mri_config.cf_run_config
+            for aperture_type, config in cfm_config.cf_run_config.items():
                 logger.info('Aperture type: {}'.format(aperture_type))
                 for run in range(0,config['n_runs']):
                     for depth in range(0,self.n_surfs):
@@ -221,7 +221,7 @@ class CleanInputData:
         self.prf_run_config     = mri_config.prf_run_config
         self.prf_config         = prf_config
         if project_config.do_cf_modeling:
-            self.cfm_run_config = mri_config.cfm_run_config
+            self.cf_run_config = mri_config.cf_run_config
             self.cfm_config     = cfm_config
         self.y_coord_cutoff     = prf_config.y_coord_cutoff
         self.logger             = logger
@@ -252,7 +252,7 @@ class CleanInputData:
         
         # CF runs (if applicable) across all apertures, runs, depths
         if project_config.do_cf_modeling:
-            for aperture_type, config in self.cfm_run_config.items():
+            for aperture_type, config in self.cf_run_config.items():
                 config['raw_data'] = {}
                 for run in range(0,config['n_runs']):
                     config['raw_data'][run] = {}
@@ -276,7 +276,7 @@ class CleanInputData:
 
         ## Clean input data - for each CF run (if applicable):
         if cfm_config is not None:
-            mri_config.cfm_run_config = self._clean_data_cfm()
+            mri_config.cf_run_config = self._clean_data_cfm()
 
     def _make_occipital_mask(self):
         """
@@ -395,7 +395,7 @@ class CleanInputData:
         Average over runs."""
         if not os.path.exists(self.cfm_config.input_data_dict_fn):
             self.logger.info('Cleaning CF input data...')
-            for aperture_type, config in self.cfm_run_config.items():
+            for aperture_type, config in self.cf_run_config.items():
                 self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
 
                 # Check if the current aperture type is present in the prf_run_config and if it has the same number of runs
@@ -414,7 +414,7 @@ class CleanInputData:
                     if aperture_type not in self.prf_run_config:
                         self.logger.info('Aperture type {} is not present in the prf_run_config.'.format(aperture_type))
                     if config['n_runs'] != self.prf_run_config[aperture_type]['n_runs']:
-                        self.logger.error('Number of runs for {} aperture type in prf_run_config does not match the number of runs for {} aperture type in the cfm_run_config.'.format(aperture_type,aperture_type))
+                        self.logger.error('Number of runs for {} aperture type in prf_run_config does not match the number of runs for {} aperture type in the cf_run_config.'.format(aperture_type,aperture_type))
                     
                     self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
                     config['filtered_data'] = {}
@@ -457,15 +457,15 @@ class CleanInputData:
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
             with open(self.cfm_config.input_data_dict_fn, 'wb') as pickle_file:
-                pickle.dump(self.cfm_run_config, pickle_file)
+                pickle.dump(self.cf_run_config, pickle_file)
         else:
             self.logger.info('Cleaned data already exists at {}'.format(self.cfm_config.input_data_dict_fn))
             self.logger.info('Loading cleaned data...')
             with open(self.cfm_config.input_data_dict_fn, 'rb') as pickle_file:
-                self.cfm_run_config = pickle.load(pickle_file)
+                self.cf_run_config = pickle.load(pickle_file)
 
             # Check if the cleaned data matches the dimensions of the occipital mask
-            for aperture_type, config in self.cfm_run_config.items():
+            for aperture_type, config in self.cf_run_config.items():
                 for run in range(0,config['n_runs']):
                     for depth in range(0,self.n_surfs):
                         if config['masked_data'][run][depth].shape[1] != self.occ_mask.shape[0]:
@@ -474,7 +474,7 @@ class CleanInputData:
                             sys.exit(1)
 
             # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg')
-            for aperture_type, config in self.cfm_run_config.items():
+            for aperture_type, config in self.cf_run_config.items():
                 for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']:
                     if key not in config:
                         self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
@@ -483,4 +483,4 @@ class CleanInputData:
                         self.logger.error('It is suggested to delete the cleaned data dictionary and rerun the analysis.')
                         sys.exit(1)
 
-        return self.cfm_run_config
+        return self.cf_run_config
