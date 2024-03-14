@@ -460,6 +460,10 @@ class CfModelingConfig:
 
         cfm_output_dir = opj(self.prf_output_dir,'cfm')
 
+        # check if cfm_output_dir exists, if not, create it
+        if not os.path.exists(cfm_output_dir):
+            os.makedirs(cfm_output_dir)
+
         # data dictionary files
         input_data_dict_fn      = opj(cfm_output_dir,self.hemi+'_input_data.pckl')
         output_data_dict_fn     = opj(cfm_output_dir,self.hemi+'_output_data.pckl')
