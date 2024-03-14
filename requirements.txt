@@ -6,3 +6,4 @@ nilearn
 nipype
 nibabel
 fslpy
+surfdist
