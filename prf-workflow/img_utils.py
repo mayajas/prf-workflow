@@ -9,6 +9,7 @@ from os.path import join as opj
 import pickle
 import subprocess
 import sys
+import surfdist as sd
 
 def is_running_on_slurm():
     return "SLURM_JOB_ID" in os.environ
@@ -481,3 +482,51 @@ class CleanInputData:
                         sys.exit(1)
 
         return self.cf_run_config
+    
+class CreateSubsurfaces:
+    """This class contains functions that are used to generate the subsurfaces used for connective field modeling."""
+    def __init__(self, mri_config, logger):
+        self.cf_run_config, self.cfm_output_config = mri_config.cf_run_config, mri_config.cfm_output_config
+        self.logger             = logger
+
+        ## Load cortical label
+        logger.info('Loading GM/WM surface meshes...')
+        self.cort = nib.freesurfer.read_label(mri_config.cort_label_fn) 
+
+        # Create subsurfaces
+        self.logger.info('Creating subsurfaces...')
+        self._create_subsurfaces()
+
+    def _create_subsurfaces(self):
+        """
+        This function creates the subsurfaces used for connective field modeling.
+        """
+        for aperture_type, config in self.cfm_output_config.items():
+            self.logger.info('Aperture type: {}'.format(aperture_type))
+            for key in config:
+                self.logger.info('Creating subsurface: {}'.format(key))
+                # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
+                self.logger.info('Loading relevant ROI label and cortical surface...')
+                config[key]['subsurface']   = nib.freesurfer.io.read_label(config[key]['roi_label'])
+                config[key]['surf']         = nib.freesurfer.read_geometry(config[key]['surf_fn'])
+                
+                # Get number of vertices in current subsurface
+                n_vtx_sub     = config[key]['subsurface'].shape[0]
+
+                # for each vertex in subsurface, get distance to all other vertices within the subsurface
+                self.logger.info('Calculating distance matrix...')
+                config[key]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
+                vtx                 = 0
+                for src in config[key]['subsurface']:
+                    #     distance_matrix
+                    wb_dist    = sd.analysis.dist_calc(config[key]['surf'], self.cort, src)
+                    config[key]['dist'][vtx,] = wb_dist[config[key]['subsurface']]
+                    vtx       += 1
+
+                # Get preprocessed timeseries within the given ROI and depth
+                self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
+                config[key]['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][config[key]['depth']][config[key]['subsurface'],]
+        
+            self.logger.info('Subsurface for aperture type {} created.'.format(aperture_type))
+
+        self.logger.info('All subsurfaces created.')

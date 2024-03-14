@@ -5,7 +5,7 @@ import sys
 
 from logger import setup_logger
 from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfMappingConfig, DataCleanConfig, CfModelingConfig
-from img_utils import EquivolumetricSurfaces, SurfaceProject, CleanInputData
+from img_utils import EquivolumetricSurfaces, SurfaceProject, CleanInputData, CreateSubsurfaces
 from prfpy_interface import PrfpyStimulus, PrfFitting
 
 def main(config_file,sub_idx,hem_idx):
@@ -75,6 +75,9 @@ def main(config_file,sub_idx,hem_idx):
 
             ## Clean input data
             CleanInputData(project_config, prf_config, mri_config, data_clean_config, logger, cfm_config)
+
+            ## Generate subsurfaces (source ROI for CF modeling)
+            CreateSubsurfaces(mri_config, logger)
 
         ###########################################################################################
         ### PRF mapping
