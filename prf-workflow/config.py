@@ -368,6 +368,7 @@ class CfModelingConfig:
     """
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
         self.n_surfs        = project_config.n_surfs
+        self.hemi           = project_config.hemi
         self.logger         = logger
         self.prf_output_dir = prf_config.prf_output_dir
         self.ROI_dir        = dir_config.ROI_dir
@@ -392,7 +393,7 @@ class CfModelingConfig:
             sys.exit(1)
         
         # append path and '.label' extension to each roi in roi_list
-        self.roi_list = [opj(self.ROI_dir, roi+'.label') for roi in self.roi_list]
+        self.roi_list = [opj(self.ROI_dir, self.hemi+roi+'.label') for roi in self.roi_list]
 
         # check that all files in list of roi_list exist
         if self.roi_list:
