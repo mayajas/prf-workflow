@@ -142,7 +142,10 @@ class DirConfig:
         else:
             self.logger.info('ROI directory: ' + self.ROI_dir)
 
-        return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir
+        if self.project_config.do_cf_modeling:
+            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir
+        else:
+            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir
 
 class PrfMappingConfig:
     """
