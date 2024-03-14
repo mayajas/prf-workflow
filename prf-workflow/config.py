@@ -77,6 +77,7 @@ class DirConfig:
     """
     def __init__(self, config_file, project_config, logger):
         self.subject_id     = project_config.subject_id
+        self.project_config = project_config
         self.logger         = logger
 
         # get config from config file
