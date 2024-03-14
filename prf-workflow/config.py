@@ -414,9 +414,10 @@ class CfModelingConfig:
                 if not isinstance(value, dict):
                     self.logger.error('Value for '+key+' subsurface is not a dictionary. Please check the configuration file.')
                     sys.exit(1)
-                if not value.get('roi', None) or not value.get('depth', None):
+                # check if the subsurface contains elements "roi" and "depth"
+                if 'roi' not in value or 'depth' not in value:
                     self.logger.error('Value for '+key+' subsurface does not contain a "roi" or "depth" key. Please check the configuration file.')
-                    sys.exit(1)
+                    sys.exit(1)              
                 if not isinstance(value['roi'], int) or not isinstance(value['depth'], int):
                     self.logger.error('Value for '+key+' subsurface contains a "roi" or "depth" key that is not an integer. Please check the configuration file.')
                     sys.exit(1)
