@@ -170,8 +170,7 @@ class SurfaceProject:
         ## Surface-project CF mapping runs (if applicable)
         if project_config.do_cf_modeling:
             logger.info('Surface-projecting CF mapping runs...')
-            self.cf_run_config = mri_config.cf_run_config
-            for aperture_type, config in cfm_config.cf_run_config.items():
+            for aperture_type, config in self.cf_run_config.items():
                 logger.info('Aperture type: {}'.format(aperture_type))
                 for run in range(0,config['n_runs']):
                     for depth in range(0,self.n_surfs):
@@ -221,7 +220,7 @@ class CleanInputData:
         self.prf_run_config     = mri_config.prf_run_config
         self.prf_config         = prf_config
         if project_config.do_cf_modeling:
-            self.cf_run_config = mri_config.cf_run_config
+            self.cf_run_config  = mri_config.cf_run_config
             self.cfm_config     = cfm_config
         self.y_coord_cutoff     = prf_config.y_coord_cutoff
         self.logger             = logger
