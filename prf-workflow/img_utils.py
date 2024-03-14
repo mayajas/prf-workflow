@@ -531,38 +531,38 @@ class CreateSubsurfaces:
         This function creates the subsurfaces used for connective field modeling.
         """
         for aperture_type, config in self.cfm_output_config.items():
-            self.logger.info('Aperture type: {}'.format(aperture_type))
-            for key in config:
-                self.logger.info('Creating subsurface: {}'.format(key))
+            self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
+            for subsurf_name, subsurface in config.items():
+                self.logger.info('Creating subsurface: {}'.format(subsurf_name))
                 # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
                 self.logger.info('Loading relevant ROI label and cortical surface...')
-                config[key]['subsurface']   = nib.freesurfer.io.read_label(config[key]['roi_label'])
-                config[key]['surf']         = nib.freesurfer.read_geometry(config[key]['surf_fn'])
-                
+                subsurface['subsurface']   = nib.freesurfer.io.read_label(subsurface['roi_label'])
+                subsurface['surf']         = nib.freesurfer.read_geometry(subsurface['surf_fn'])
+            
                 # Get number of vertices in current subsurface
-                n_vtx_sub     = config[key]['subsurface'].shape[0]
+                n_vtx_sub     = subsurface['subsurface'].shape[0]
 
                 # for each vertex in subsurface, get distance to all other vertices within the subsurface
                 self.logger.info('Calculating distance matrix...')
-                config[key]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
+                subsurface['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
                 vtx                 = 0
-                for src in config[key]['subsurface']:
+                for src in subsurface['subsurface']:
                     #     distance_matrix
-                    wb_dist    = sd.analysis.dist_calc(config[key]['surf'], self.cort, src)
-                    config[key]['dist'][vtx,] = wb_dist[config[key]['subsurface']]
+                    wb_dist    = sd.analysis.dist_calc(subsurface['surf'], self.cort, src)
+                    subsurface['dist'][vtx,] = wb_dist[subsurface['subsurface']]
                     vtx       += 1
 
                 # Get preprocessed timeseries within the given ROI and depth
                 self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
-                subsurface_indices, flag_str = translate_indices(self.occ_mask,config[key]['subsurface'])
+                subsurface_indices, flag_str = translate_indices(self.occ_mask,subsurface['subsurface'])
                 if flag_str is not None:
                     self.logger.error(flag_str)
                     sys.exit(1)
-                config[key]['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][config[key]['depth']][subsurface_indices,]
+                subsurface['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][subsurface['depth']][subsurface_indices,]
         
-            self.logger.info('Subsurface for aperture type {} created.'.format(aperture_type))
+                self.logger.info('Subsurface {} created.'.format(subsurf_name))
 
-        self.logger.info('All subsurfaces created.')
+            self.logger.info('Created all subsurfaces for aperture type: {}'.format(aperture_type))
 
         ## Save subsurfaces
         self.logger.info('Saving subsurfaces...')

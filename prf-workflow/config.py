@@ -657,18 +657,20 @@ class MriConfig:
 
         cfm_output_config = {
             key: {
-                'roi_label': self.cfm_config.roi_list[self.cfm_config.subsurfaces[key]['roi']],
-                'subsurface': [],
-                'depth': self.cfm_config.subsurfaces[key]['depth'],
-                'surf_fn': opj(self.FS_dir, 'surf', self.hemi+'.'+self.equi_surf_fn_list[self.cfm_config.subsurfaces[key]['depth']]),
-                'surf': [],
-                'dist': [],
-                'data': [],
-                'stim': [],
-                'model': [],
-                'gf': [],
-                'is_gf': []
-            } for key in self.cfm_config.subsurfaces
+                subsurf: {
+                    'roi_label': self.cfm_config.roi_list[self.cfm_config.subsurfaces[subsurf]['roi']],
+                    'subsurface': [],
+                    'depth': self.cfm_config.subsurfaces[subsurf]['depth'],
+                    'surf_fn': opj(self.FS_dir, 'surf', self.hemi+'.'+self.equi_surf_fn_list[self.cfm_config.subsurfaces[subsurf]['depth']]),
+                    'surf': [],
+                    'dist': [],
+                    'data': [],
+                    'stim': [],
+                    'model': [],
+                    'gf': [],
+                    'is_gf': []
+                } for subsurf in self.cfm_config.subsurfaces
+            } for key in self.cf_run_config
         }
 
         return self.cf_run_config, cfm_output_config
