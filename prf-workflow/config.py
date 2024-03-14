@@ -117,9 +117,11 @@ class DirConfig:
             sys.exit(1)
         else:
             self.logger.info('Freesurfer directory: ' + self.FS_dir)
+        
         if not os.path.exists(self.output_dir):
-            self.logger.error('Output directory does not exist.')
-            sys.exit(1)
+            # if output dir doesn't exist, create it
+            os.makedirs(self.output_dir)
+            self.logger.info('Output directory created: ' + self.output_dir)
         else: 
             self.logger.info('Output directory: ' + self.output_dir)
         if not os.path.exists(self.apertures_dir):
@@ -133,8 +135,9 @@ class DirConfig:
         else:
             self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
         if not os.path.exists(self.ROI_dir) and self.project_config.do_cf_modeling:
-                self.logger.error('ROI directory does not exist.')
-                sys.exit(1)
+                # if ROI dir doesn't exist, create it
+                os.makedirs(self.ROI_dir)
+                self.logger.info('ROI directory created: ' + self.ROI_dir)
         else:
             self.logger.info('ROI directory: ' + self.ROI_dir)
 
@@ -392,6 +395,7 @@ class CfModelingConfig:
             for roi in self.roi_list:
                 if not os.path.exists(roi):
                     self.logger.error('ROI file does not exist: '+roi)
+                    self.logger.error('Make sure all ROI labels exist before running CF analysis!')
                     sys.exit(1)
 
         self.subsurfaces = class_section.get('subsurfaces', None)
