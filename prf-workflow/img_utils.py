@@ -412,8 +412,6 @@ class CleanInputData:
                     # if aperture_type is not in prf_run_config
                     if aperture_type not in self.prf_run_config:
                         self.logger.info('Aperture type {} is not present in the prf_run_config.'.format(aperture_type))
-                    if config['n_runs'] != self.prf_run_config[aperture_type]['n_runs']:
-                        self.logger.error('Number of runs for {} aperture type in prf_run_config does not match the number of runs for {} aperture type in the cf_run_config.'.format(aperture_type,aperture_type))
                     
                     self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
                     config['filtered_data'] = {}
