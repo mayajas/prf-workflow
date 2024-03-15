@@ -253,10 +253,6 @@ class CleanInputData:
         self.gm_mesh        = surface.load_surf_mesh(mri_config.gm_surf_fn) 
         self.wm_mesh        = surface.load_surf_mesh(mri_config.wm_surf_fn)
 
-        ## Load cortical label 
-        logger.info('Loading cortical label...')
-        self.cort_label     = nib.freesurfer.read_label(mri_config.cort_label_fn)
-
         ## Load surface-projected data
         logger.info('Loading surface-projected data...')
         
@@ -537,11 +533,14 @@ class CreateSubsurfaces:
                 self.logger.info('Creating subsurface: {}'.format(subsurf_name))
                 # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
                 self.logger.info('Loading relevant ROI label and cortical surface...')
+                self.logger.info('ROI label: {}'.format(subsurface['roi_label']))
+                self.logger.info('Cortical surface: {}'.format(subsurface['surf_fn']))
                 subsurface['subsurface']   = nib.freesurfer.io.read_label(subsurface['roi_label'])
                 subsurface['surf']         = nib.freesurfer.read_geometry(subsurface['surf_fn'])
             
                 # Get number of vertices in current subsurface
                 n_vtx_sub     = subsurface['subsurface'].shape[0]
+                self.logger.info('Number of vertices in current subsurface: {}'.format(n_vtx_sub))
 
                 # for each vertex in subsurface, get distance to all other vertices within the subsurface
                 self.logger.info('Calculating distance matrix...')
