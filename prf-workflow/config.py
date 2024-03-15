@@ -661,7 +661,7 @@ class MriConfig:
                     'roi_label': self.cfm_config.roi_list[self.cfm_config.subsurfaces[subsurf]['roi']],
                     'subsurface': [],
                     'depth': self.cfm_config.subsurfaces[subsurf]['depth'],
-                    'surf_fn': opj(self.FS_dir, 'surf', self.hemi+'.'+self.equi_surf_fn_list[self.cfm_config.subsurfaces[subsurf]['depth']]),
+                    'surf_fn': opj(self.FS_dir,self.subject_id, 'surf', self.hemi+'.'+self.equi_surf_fn_list[self.cfm_config.subsurfaces[subsurf]['depth']]),
                     'surf': [],
                     'dist': [],
                     'data': [],
