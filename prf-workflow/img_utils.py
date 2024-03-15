@@ -10,6 +10,7 @@ import pickle
 import subprocess
 import sys
 import surfdist as sd
+from surfdist import analysis
 
 def is_running_on_slurm():
     return "SLURM_JOB_ID" in os.environ
