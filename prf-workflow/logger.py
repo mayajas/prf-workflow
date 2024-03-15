@@ -1,4 +1,5 @@
 import logging
+import os
 from os.path import join as opj
 
 def setup_logger(project_config):
@@ -16,6 +17,10 @@ def setup_logger(project_config):
     subject_id  = project_config.subject_id
     hemi        = project_config.hemi
     logger_dir  = project_config.logger_dir
+
+    # Check if logger dir exists, create it if not
+    if not os.path.exists(logger_dir):
+        os.makedirs(logger_dir)
     
     # Create a logger
     logger = logging.getLogger(__name__)
