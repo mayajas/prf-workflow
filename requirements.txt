@@ -6,4 +6,4 @@ nilearn
 nipype
 nibabel
 fslpy
-surfdist
+git+https://github.com/mayajas/surfdist.git@master#egg=surfdist

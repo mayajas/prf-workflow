@@ -508,11 +508,8 @@ class CreateSubsurfaces:
         self.cfm_output_config  = mri_config.cfm_output_config
         self.occ_mask_fn        = mri_config.occ_mask_fn
         self.cfm_config         = cfm_config
+        self.cort_label_fn      = mri_config.cort_label_fn
         self.logger             = logger
-
-        ## Load cortical label
-        logger.info('Loading GM/WM surface meshes...')
-        self.cort = nib.freesurfer.read_label(mri_config.cort_label_fn) 
 
         ## Load occipital mask
         logger.info('Loading occipital mask...')
@@ -527,6 +524,11 @@ class CreateSubsurfaces:
         """
         This function creates the subsurfaces used for connective field modeling.
         """
+        ## Load cortical label
+        self.logger.info('Loading cortical label...')
+        self.logger.info('Cortical label: {}'.format(self.cort_label_fn))
+        self.cort = nib.freesurfer.read_label(self.cort_label_fn) 
+
         for aperture_type, config in self.cfm_output_config.items():
             self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
