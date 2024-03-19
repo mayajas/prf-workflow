@@ -552,6 +552,7 @@ class CreateSubsurfaces:
                     #     distance_matrix
                     wb_dist    = sd.analysis.dist_calc(subsurface['surf'], self.cort, src)
                     subsurface['dist'][vtx,] = wb_dist[subsurface['subsurface']]
+                    self.logger.info("...vertex %d/%d", vtx+1, n_vtx_sub)
                     vtx       += 1
 
                 # Get preprocessed timeseries within the given ROI and depth
