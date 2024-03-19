@@ -571,7 +571,7 @@ class CreateSubsurfaces:
 
                 # Get preprocessed timeseries within the given ROI and depth
                 self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
-                subsurface_indices, flag_str = translate_indices(self.occ_mask,subsurface['subsurface'])
+                subsurface['subsurface'], flag_str = translate_indices(self.occ_mask,subsurface['subsurface'])
                 if flag_str is not None:
                     self.logger.error(flag_str)
                     sys.exit(1)
