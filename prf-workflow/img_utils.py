@@ -567,7 +567,6 @@ class CreateSubsurfaces:
                     results = pool.map(partial_func, subsurface['subsurface'])
                     for result, src in zip(results, subsurface['subsurface']):
                         subsurface['dist'][vtx,] = result
-                        self.logger.info("...vertex %d/%d", vtx+1, n_vtx_sub)
                         vtx += 1
 
                 # Get preprocessed timeseries within the given ROI and depth
@@ -576,7 +575,7 @@ class CreateSubsurfaces:
                 if flag_str is not None:
                     self.logger.error(flag_str)
                     sys.exit(1)
-                subsurface['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][subsurface['depth']][subsurface_indices,]
+                subsurface['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][subsurface['depth']]
         
                 self.logger.info('Subsurface {} created.'.format(subsurf_name))
 
