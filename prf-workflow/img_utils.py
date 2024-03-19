@@ -9,6 +9,8 @@ from os.path import join as opj
 import pickle
 import subprocess
 import sys
+from multiprocessing import Pool
+from functools import partial
 import surfdist as sd
 from surfdist import analysis
 
@@ -524,6 +526,14 @@ class CreateSubsurfaces:
         """
         This function creates the subsurfaces used for connective field modeling.
         """
+
+        def calculate_distance(src, subsurface, cort):
+            """
+            Function to calculate distance for a single source vertex.
+            """
+            wb_dist = sd.analysis.dist_calc(subsurface['surf'], cort, src)
+            return wb_dist[subsurface['subsurface']]
+    
         ## Load cortical label
         self.logger.info('Loading cortical label...')
         self.logger.info('Cortical label: {}'.format(self.cort_label_fn))
@@ -548,12 +558,16 @@ class CreateSubsurfaces:
                 self.logger.info('Calculating distance matrix...')
                 subsurface['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
                 vtx                 = 0
-                for src in subsurface['subsurface']:
-                    #     distance_matrix
-                    wb_dist    = sd.analysis.dist_calc(subsurface['surf'], self.cort, src)
-                    subsurface['dist'][vtx,] = wb_dist[subsurface['subsurface']]
-                    self.logger.info("...vertex %d/%d", vtx+1, n_vtx_sub)
-                    vtx       += 1
+                # Use multiprocessing pool to parallelize the loop
+                with Pool() as pool:
+                    # Define a partial function with fixed arguments
+                    partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort)
+                    # Iterate over source vertices in parallel
+                    results = pool.map(partial_func, subsurface['subsurface'])
+                    for result, src in zip(results, subsurface['subsurface']):
+                        subsurface['dist'][vtx,] = result
+                        self.logger.info("...vertex %d/%d", vtx+1, n_vtx_sub)
+                        vtx += 1
 
                 # Get preprocessed timeseries within the given ROI and depth
                 self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
