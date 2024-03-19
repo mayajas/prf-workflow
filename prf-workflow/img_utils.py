@@ -534,6 +534,14 @@ class CreateSubsurfaces:
         This function creates the subsurfaces used for connective field modeling.
         """
 
+        # First, try loading cfm_output_config
+        if os.path.exists(self.cfm_config.output_data_dict_fn):
+            self.logger.info('Subsurfaces already exist at {}'.format(self.cfm_config.output_data_dict_fn))
+            self.logger.info('Loading subsurfaces...')
+            with open(self.cfm_config.output_data_dict_fn, 'rb') as pickle_file:
+                self.cfm_output_config = pickle.load(pickle_file)
+
+            
     
         ## Load cortical label
         self.logger.info('Loading cortical label...')
@@ -544,44 +552,48 @@ class CreateSubsurfaces:
             self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Creating subsurface: {}'.format(subsurf_name))
-                # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
-                self.logger.info('Loading relevant ROI label and cortical surface...')
-                self.logger.info('ROI label: {}'.format(subsurface['roi_label']))
-                self.logger.info('Cortical surface: {}'.format(subsurface['surf_fn']))
-                subsurface['subsurface']   = nib.freesurfer.io.read_label(subsurface['roi_label'])
-                subsurface['surf']         = nib.freesurfer.read_geometry(subsurface['surf_fn'])
+                # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them
+                if not subsurface['subsurface'] or not subsurface['surf'] or not subsurface['dist'] or not subsurface['data']:
+                    # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
+                    self.logger.info('Loading relevant ROI label and cortical surface...')
+                    self.logger.info('ROI label: {}'.format(subsurface['roi_label']))
+                    self.logger.info('Cortical surface: {}'.format(subsurface['surf_fn']))
+                    self.cfm_output_config[aperture_type][subsurf_name]['subsurface']   = nib.freesurfer.io.read_label(subsurface['roi_label'])
+                    self.cfm_output_config[aperture_type][subsurf_name]['surf']         = nib.freesurfer.read_geometry(subsurface['surf_fn'])
             
-                # Get number of vertices in current subsurface
-                n_vtx_sub     = subsurface['subsurface'].shape[0]
-                self.logger.info('Number of vertices in current subsurface: {}'.format(n_vtx_sub))
+                    # Get number of vertices in current subsurface
+                    n_vtx_sub     = self.cfm_output_config[aperture_type][subsurf_name]['subsurface'].shape[0]
+                    self.logger.info('Number of vertices in current subsurface: {}'.format(n_vtx_sub))
 
-                # for each vertex in subsurface, get distance to all other vertices within the subsurface
-                self.logger.info('Calculating distance matrix...')
-                subsurface['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
-                vtx                 = 0
-                # Use multiprocessing pool to parallelize the loop
-                with Pool() as pool:
-                    # Define a partial function with fixed arguments
-                    partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort)
-                    # Iterate over source vertices in parallel
-                    results = pool.map(partial_func, subsurface['subsurface'])
-                    for result, src in zip(results, subsurface['subsurface']):
-                        subsurface['dist'][vtx,] = result
-                        vtx += 1
-
-                # Get preprocessed timeseries within the given ROI and depth
-                self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
-                subsurface['subsurface'], flag_str = translate_indices(self.occ_mask,subsurface['subsurface'])
-                if flag_str is not None:
-                    self.logger.error(flag_str)
-                    sys.exit(1)
-                subsurface['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][subsurface['depth']]
+                    # for each vertex in subsurface, get distance to all other vertices within the subsurface
+                    self.logger.info('Calculating distance matrix...')
+                    self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
+                    vtx                 = 0
+                    # Use multiprocessing pool to parallelize the loop
+                    with Pool() as pool:
+                        # Define a partial function with fixed arguments
+                        partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort)
+                        # Iterate over source vertices in parallel
+                        results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
+                        for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
+                            self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx,] = result
+                            vtx += 1
+                
+                    # Get preprocessed timeseries within the given ROI and depth
+                    self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
+                    self.cfm_output_config[aperture_type][subsurf_name]['subsurface'], flag_str = translate_indices(self.occ_mask,self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
+                    if flag_str is not None:
+                        self.logger.error(flag_str)
+                        sys.exit(1)
+                    self.cfm_output_config[aperture_type][subsurf_name]['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][subsurface['depth']]
         
-                self.logger.info('Subsurface {} created.'.format(subsurf_name))
+                    self.logger.info('Subsurface {} created.'.format(subsurf_name))
+
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface...')
+                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
 
             self.logger.info('Created all subsurfaces for aperture type: {}'.format(aperture_type))
 
-        ## Save subsurfaces
-        self.logger.info('Saving subsurfaces...')
-        with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
-            pickle.dump(self.cfm_output_config, pickle_file)
+        
