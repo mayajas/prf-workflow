@@ -38,6 +38,13 @@ def translate_indices(original_mask, new_mask):
 
     return new_indices, flag_str
 
+def calculate_distance(src, subsurface, cort):
+    """
+    Function to calculate distance for a single source vertex.
+    """
+    wb_dist = sd.analysis.dist_calc(subsurface['surf'], cort, src)
+    return wb_dist[subsurface['subsurface']]
+
 class EquivolumetricSurfaces:
     """
     This class contains functions that are used to generate equivolumetric surfaces.
@@ -527,12 +534,6 @@ class CreateSubsurfaces:
         This function creates the subsurfaces used for connective field modeling.
         """
 
-        def calculate_distance(src, subsurface, cort):
-            """
-            Function to calculate distance for a single source vertex.
-            """
-            wb_dist = sd.analysis.dist_calc(subsurface['surf'], cort, src)
-            return wb_dist[subsurface['subsurface']]
     
         ## Load cortical label
         self.logger.info('Loading cortical label...')
