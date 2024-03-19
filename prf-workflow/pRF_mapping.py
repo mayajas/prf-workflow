@@ -6,7 +6,7 @@ import sys
 from logger import setup_logger
 from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfMappingConfig, DataCleanConfig, CfModelingConfig
 from img_utils import EquivolumetricSurfaces, SurfaceProject, CleanInputData, CreateSubsurfaces
-from prfpy_interface import PrfpyStimulus, PrfFitting
+from prfpy_interface import PrfpyStimulus, PrfFitting, CfStimulus
 
 def main(config_file,sub_idx,hem_idx):
     """
@@ -87,16 +87,20 @@ def main(config_file,sub_idx,hem_idx):
         ## Fit pRF model
         PrfFitting(dir_config,mri_config,prf_config,project_config,logger)
 
+        logger.info("pRF analysis completed successfully")
+
         ###########################################################################################
         ### CF modeling
         if project_config.do_cf_modeling:
             ## Create CF stimulus objects
-            pass
+            CfStimulus(mri_config, cfm_config, logger)
 
             ## Fit CF model
             pass
 
-        logger.info("pRF analysis completed successfully")
+            logger.info("CFM analysis completed successfully")
+
+        
     except FileNotFoundError as e:
         logger.error(f"Error: {str(e)}")
         logger.exception("Full exception traceback:")

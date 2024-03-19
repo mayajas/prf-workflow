@@ -29,7 +29,6 @@ class PrfpyStimulus:
     """
     def __init__(self, dir_config, mri_config, prf_config, logger):
         self.dir_config             = dir_config
-
         self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
         self.screen_distance_cm     = prf_config.screen_distance_cm
         self.TR                     = mri_config.TR
@@ -60,6 +59,9 @@ class PrfpyStimulus:
             with open(self.output_data_dict_fn, 'rb') as pickle_file:
                 self.prfpy_output_config = pickle.load(pickle_file)
             self.logger.info('Loaded.')
+        else:
+            self.logger.error(f'Output data dict does not exist: {self.output_data_dict_fn}')
+            sys.exit(1)
         
         # Define stimulus object for each aperture type
         for aperture_type, config in self.prf_run_config.items():
@@ -863,36 +865,21 @@ class PrfFitting:
 
 class CfStimulus:
 
-    def __init__(self, dir_config, mri_config, prf_config, cfm_config, logger):
-        self.dir_config             = dir_config
+    def __init__(self, mri_config, cfm_config, logger):
+        self.cf_run_config          = mri_config.cf_run_config
+        self.cfm_output_config      = mri_config.cfm_output_config
+        self.occ_mask_fn            = mri_config.occ_mask_fn
+        self.output_data_dict_fn    = cfm_config.output_data_dict_fn
 
-        self.prf_run_config         = mri_config.prf_run_config
-        self.prfpy_output_config    = mri_config.prfpy_output_config
-        self.output_data_dict_fn    = prf_config.output_data_dict_fn
-
-        self.source_rois            = cfm_config.source_rois
-        self.source_surfs           = cfm_config.source_surfs
-        self.CF_sizes               = cfm_config.CF_sizes
-
-        self.logger                 = logger
-
-        # Define source regions
-        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        self.logger.info('Defining CF modeling source regions')
-        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        self._define_source_regions()
+        self.logger             = logger
         
         # Create stimulus object
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
         self.logger.info('Creating stimulus object')
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        mri_config.prfpy_output_config  = self._create_cf_stim_obj()
+        mri_config.cfm_output_config  = self._create_cf_stim_obj()
         self.logger.info('Stimulus object created')
 
-    def _define_source_regions(self):
-        """
-        Define source regions for CF modeling.
-        """
 
 
     def _create_cf_stim_obj(self):
@@ -900,3 +887,35 @@ class CfStimulus:
         Create a stimulus object for CF modeling.
         """
         from prfpy.stimulus import CFStimulus
+
+        # First, try loading the output data dict
+        if os.path.exists(self.output_data_dict_fn):
+            self.logger.info(f'Output data dict already exists: {self.output_data_dict_fn}')
+            self.logger.info('Loading output data dict...')
+            with open(self.output_data_dict_fn, 'rb') as pickle_file:
+                self.cfm_output_config = pickle.load(pickle_file)
+            self.logger.info('Loaded.')
+        else:
+            self.logger.error(f'Output data dict does not exist: {self.output_data_dict_fn}')
+            sys.exit(1)
+        
+        # Define stimulus object for each aperture type and each subsurface
+        for aperture_type, config in self.cfm_output_config.items():
+            self.logger.info('Creating CFM stimulus for aperture type: {}'.format(aperture_type))
+            for subsurf_name, subsurface in config.items():
+                self.logger.info('Subsurface: {}'.format(subsurf_name))
+
+                if not subsurface['stim']:
+                    subsurface['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
+                else:
+                    self.logger.info('Stimulus object already defined')
+
+        ## Save stimulus objects
+        with open(self.output_data_dict_fn, 'wb') as pickle_file:
+            pickle.dump(self.cfm_output_config, pickle_file)
+            
+            
+        return self.cfm_output_config
+
+                
+
