@@ -88,16 +88,18 @@ def main(config_file,sub_idx,hem_idx):
         PrfFitting(dir_config,mri_config,prf_config,project_config,logger)
 
         logger.info('')
-        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        logger.info('============================================================')
+        logger.info('============================================================')
         logger.info("pRF analysis completed successfully!")
-        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        logger.info('')
+        logger.info('============================================================')
+        logger.info('============================================================')
+        
 
         ###########################################################################################
         ### CF modeling
         if project_config.do_cf_modeling:
+            logger.info('')
+
             ## Create CF stimulus objects
             CfStimulus(mri_config, cfm_config, logger)
 
@@ -105,12 +107,11 @@ def main(config_file,sub_idx,hem_idx):
             CfModeling(mri_config, cfm_config, logger)
 
             logger.info('')
-            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            logger.info('============================================================')
+            logger.info('============================================================')
             logger.info("CFM analysis completed successfully!")
-            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-            logger.info('')
+            logger.info('============================================================')
+            logger.info('============================================================')
 
         
     except FileNotFoundError as e:
