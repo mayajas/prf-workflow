@@ -907,14 +907,14 @@ class CfStimulus:
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
                 if subsurface['stim'] is None:
-                    subsurface['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
+                    self.cfm_output_config[aperture_type][subsurf_name]['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
+
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface stimulus...')
+                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
                 else:
                     self.logger.info('Stimulus object already defined')
-
-        ## Save stimulus objects
-        with open(self.output_data_dict_fn, 'wb') as pickle_file:
-            pickle.dump(self.cfm_output_config, pickle_file)
-            
             
         return self.cfm_output_config
     
@@ -927,6 +927,7 @@ class CfModeling:
         self.cfm_output_config      = mri_config.cfm_output_config
         self.occ_mask_fn            = mri_config.occ_mask_fn
         self.output_data_dict_fn    = cfm_config.output_data_dict_fn
+        self.sigmas                 = cfm_config.sigmas
 
         self.logger             = logger
         
@@ -944,3 +945,65 @@ class CfModeling:
         """
         from prfpy.model import CFGaussianModel
         from prfpy.fit import CFFitter
+
+        # First, try loading the output data dict
+        if os.path.exists(self.output_data_dict_fn):
+            self.logger.info(f'Output data dict already exists: {self.output_data_dict_fn}')
+            self.logger.info('Loading output data dict...')
+            with open(self.output_data_dict_fn, 'rb') as pickle_file:
+                self.cfm_output_config = pickle.load(pickle_file)
+            self.logger.info('Loaded.')
+        else:
+            self.logger.error(f'Output data dict does not exist: {self.output_data_dict_fn}')
+            sys.exit(1)
+
+
+        # Define CF model
+        for aperture_type, config in self.cfm_output_config.items():
+            self.logger.info('Defining CF model for aperture type: {}'.format(aperture_type))
+            for subsurf_name, subsurface in config.items():
+                self.logger.info('Subsurface: {}'.format(subsurf_name))
+
+                if subsurface['model'] is None:
+                    self.cfm_output_config[aperture_type][subsurf_name]['model'] = CFGaussianModel(subsurface['stim'])
+
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface CF model...')
+                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
+                else:
+                    self.logger.info('CF model already defined')
+
+        # Define CF model fitter
+        for aperture_type, config in self.cfm_output_config.items():
+            self.logger.info('Defining CF model fitter for aperture type: {}'.format(aperture_type))
+            for subsurf_name, subsurface in config.items():
+                self.logger.info('Subsurface: {}'.format(subsurf_name))
+
+                if subsurface['gf'] is None:
+                    self.cfm_output_config[aperture_type][subsurf_name]['gf'] = CFFitter(data=subsurface['data'],model=subsurface['model'])
+
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface CF model...')
+                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
+                else:
+                    self.logger.info('CF model fitter already defined')
+
+        # Fit CF model
+        for aperture_type, config in self.cfm_output_config.items():
+            self.logger.info('Fitting CF model for aperture type: {}'.format(aperture_type))
+            for subsurf_name, subsurface in config.items():
+                self.logger.info('Subsurface: {}'.format(subsurf_name))
+
+                if not subsurface['is_gf']:
+                    self.cfm_output_config[aperture_type][subsurf_name]['gf'].quick_grid_fit(self.sigmas)
+                    self.logger('CF model fit complete.')
+                    self.cfm_output_config[aperture_type][subsurf_name]['is_gf'] = True
+
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface CF model...')
+                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
+                else:
+                    self.logger.info('CF model already fit')
