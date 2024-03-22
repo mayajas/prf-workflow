@@ -81,10 +81,7 @@ class DirConfig:
         self.logger         = logger
 
         # get config from config file
-        if project_config.do_cf_modeling:
-            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling = self._load_config(config_file)
-        else:
-            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.project_config.do_cf_modeling = self._load_config(config_file)  
+        self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling = self._load_config(config_file)
 
     def _load_config(self, config_file):
         with open(config_file) as f:
@@ -144,10 +141,7 @@ class DirConfig:
         else:
             self.logger.info('ROI directory: ' + self.ROI_dir)
 
-        if self.project_config.do_cf_modeling:
-            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling
-        else:
-            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.project_config.do_cf_modeling
+        return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling
 
 class PrfMappingConfig:
     """
