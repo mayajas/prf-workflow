@@ -553,7 +553,7 @@ class CreateSubsurfaces:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Creating subsurface: {}'.format(subsurf_name))
                 # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them (use a.any())
-                if not any(subsurface['subsurface']) or not any(subsurface['surf']) or not any(subsurface['dist']) or not any(subsurface['data']):                
+                if subsurface['subsurface'] is None or subsurface['surf'] is None or subsurface['dist'] is None or subsurface['data'] is None:                
                     # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
                     self.logger.info('Loading relevant ROI label and cortical surface...')
                     self.logger.info('ROI label: {}'.format(subsurface['roi_label']))
