@@ -864,6 +864,7 @@ class PrfFitting:
 
 
 class CfStimulus:
+    """Create stimulus object for CF modeling."""
 
     def __init__(self, mri_config, cfm_config, logger):
         self.cf_run_config          = mri_config.cf_run_config
@@ -905,7 +906,7 @@ class CfStimulus:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if not subsurface['stim']:
+                if not any(subsurface['stim']):
                     subsurface['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
                 else:
                     self.logger.info('Stimulus object already defined')
@@ -916,6 +917,30 @@ class CfStimulus:
             
             
         return self.cfm_output_config
+    
 
-                
+class CfModeling:
+    """Do connective field model fitting"""
 
+    def __init__(self, mri_config, cfm_config, logger):
+        self.cf_run_config          = mri_config.cf_run_config
+        self.cfm_output_config      = mri_config.cfm_output_config
+        self.occ_mask_fn            = mri_config.occ_mask_fn
+        self.output_data_dict_fn    = cfm_config.output_data_dict_fn
+
+        self.logger             = logger
+        
+        # Fit CF model
+        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        self.logger.info('Fitting CF model')
+        self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        self._fit_cf_model()
+        self.logger.info('CF model fit complete')
+
+
+    def _fit_cf_model(self):
+        """
+        Fit CF model.
+        """
+        from prfpy.model import CFGaussianModel
+        from prfpy.fit import CFFitter

@@ -552,8 +552,8 @@ class CreateSubsurfaces:
             self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Creating subsurface: {}'.format(subsurf_name))
-                # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them
-                if not subsurface['subsurface'] or not subsurface['surf'] or not subsurface['dist'] or not subsurface['data']:
+                # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them (use a.any())
+                if not any(subsurface['subsurface']) or not any(subsurface['surf']) or not any(subsurface['dist']) or not any(subsurface['data']):                
                     # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
                     self.logger.info('Loading relevant ROI label and cortical surface...')
                     self.logger.info('ROI label: {}'.format(subsurface['roi_label']))
@@ -595,5 +595,3 @@ class CreateSubsurfaces:
                         pickle.dump(self.cfm_output_config, pickle_file)
 
             self.logger.info('Created all subsurfaces for aperture type: {}'.format(aperture_type))
-
-        
