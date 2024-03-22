@@ -6,7 +6,7 @@ import sys
 from logger import setup_logger
 from config import ProjectConfig, DirConfig, MriConfig, StimApertureConfig, PrfMappingConfig, DataCleanConfig, CfModelingConfig
 from img_utils import EquivolumetricSurfaces, SurfaceProject, CleanInputData, CreateSubsurfaces
-from prfpy_interface import PrfpyStimulus, PrfFitting, CfStimulus
+from prfpy_interface import PrfpyStimulus, PrfFitting, CfStimulus, CfModeling
 
 def main(config_file,sub_idx,hem_idx):
     """
@@ -87,7 +87,13 @@ def main(config_file,sub_idx,hem_idx):
         ## Fit pRF model
         PrfFitting(dir_config,mri_config,prf_config,project_config,logger)
 
-        logger.info("pRF analysis completed successfully")
+        logger.info('')
+        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        logger.info("pRF analysis completed successfully!")
+        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+        logger.info('')
 
         ###########################################################################################
         ### CF modeling
@@ -96,9 +102,15 @@ def main(config_file,sub_idx,hem_idx):
             CfStimulus(mri_config, cfm_config, logger)
 
             ## Fit CF model
-            pass
+            CfModeling(mri_config, cfm_config, logger)
 
-            logger.info("CFM analysis completed successfully")
+            logger.info('')
+            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            logger.info("CFM analysis completed successfully!")
+            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
+            logger.info('')
 
         
     except FileNotFoundError as e:

@@ -82,9 +82,9 @@ class DirConfig:
 
         # get config from config file
         if project_config.do_cf_modeling:
-            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir = self._load_config(config_file)
+            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling = self._load_config(config_file)
         else:
-            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir = self._load_config(config_file)  
+            self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.project_config.do_cf_modeling = self._load_config(config_file)  
 
     def _load_config(self, config_file):
         with open(config_file) as f:
@@ -136,16 +136,18 @@ class DirConfig:
         else:
             self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
         if not os.path.exists(self.ROI_dir) and self.project_config.do_cf_modeling:
-                # if ROI dir doesn't exist, create it
-                os.makedirs(self.ROI_dir)
-                self.logger.info('ROI directory created: ' + self.ROI_dir)
+                # if ROI dir doesn't exist, don't run CF modeling
+                self.logger.error('ROI directory does not exist in the location specified in the config file: '+self.ROI_dir)
+                self.logger.error('CF modeling will not be performed.')
+                # set do_cf_modeling to False
+                self.project_config.do_cf_modeling = False
         else:
             self.logger.info('ROI directory: ' + self.ROI_dir)
 
         if self.project_config.do_cf_modeling:
-            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir
+            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling
         else:
-            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir
+            return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.project_config.do_cf_modeling
 
 class PrfMappingConfig:
     """
