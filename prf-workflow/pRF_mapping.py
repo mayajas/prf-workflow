@@ -87,12 +87,13 @@ def main(config_file,sub_idx,hem_idx):
         ## Fit pRF model
         PrfFitting(dir_config,mri_config,prf_config,project_config,logger)
 
-        logger.info('')
-        logger.info('============================================================')
-        logger.info('============================================================')
-        logger.info("pRF analysis completed successfully!")
-        logger.info('============================================================')
-        logger.info('============================================================')
+        if not project_config.do_cf_modeling:
+            logger.info('')
+            logger.info('============================================================')
+            logger.info('============================================================')
+            logger.info("pRF analysis completed successfully!")
+            logger.info('============================================================')
+            logger.info('============================================================')
         
 
         ###########################################################################################
@@ -109,7 +110,7 @@ def main(config_file,sub_idx,hem_idx):
             logger.info('')
             logger.info('============================================================')
             logger.info('============================================================')
-            logger.info("CFM analysis completed successfully!")
+            logger.info("pRF and CFM analyses completed successfully!")
             logger.info('============================================================')
             logger.info('============================================================')
 

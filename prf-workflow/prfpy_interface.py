@@ -906,7 +906,7 @@ class CfStimulus:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if not any(subsurface['stim']):
+                if subsurface['stim'] is None:
                     subsurface['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
                 else:
                     self.logger.info('Stimulus object already defined')
