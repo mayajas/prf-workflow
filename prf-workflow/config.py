@@ -448,7 +448,10 @@ class CfModelingConfig:
         # check that CF_sizes is not empty
         if not self.CF_sizes:
             self.logger.error('CF_sizes is empty. Please check the configuration file.')
-            sys.exit(1)    
+            sys.exit(1) 
+        # check that CF_sizes is an np.array, if not, convert it to one
+        if not isinstance(self.CF_sizes, np.ndarray):
+            self.CF_sizes = np.array(self.CF_sizes)   
 
         return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes
     
