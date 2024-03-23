@@ -927,9 +927,9 @@ class CfModeling:
         self.cfm_output_config      = mri_config.cfm_output_config
         self.occ_mask_fn            = mri_config.occ_mask_fn
         self.output_data_dict_fn    = cfm_config.output_data_dict_fn
-        self.sigmas                 = cfm_config.sigmas
+        self.sigmas                 = cfm_config.CF_sizes
 
-        self.logger             = logger
+        self.logger                 = logger
         
         # Fit CF model
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
