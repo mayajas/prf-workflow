@@ -964,7 +964,7 @@ class CfModeling:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if len(subsurface['model']) is 0:
+                if not len(subsurface['model']):
                     self.cfm_output_config[aperture_type][subsurf_name]['model'] = CFGaussianModel(subsurface['stim'])
 
                     ## Save subsurfaces
@@ -980,7 +980,7 @@ class CfModeling:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if len(subsurface['gf']) is 0:
+                if not len(subsurface['gf']):
                     self.cfm_output_config[aperture_type][subsurf_name]['gf'] = CFFitter(data=subsurface['data'],model=subsurface['model'])
 
                     ## Save subsurfaces
@@ -996,7 +996,7 @@ class CfModeling:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if len(subsurface['is_gf']) is 0:
+                if not len(subsurface['is_gf']):
                     self.cfm_output_config[aperture_type][subsurf_name]['gf'].quick_grid_fit(self.sigmas)
                     self.logger('CF model fit complete.')
                     self.cfm_output_config[aperture_type][subsurf_name]['is_gf'] = True
