@@ -911,7 +911,7 @@ class CfStimulus:
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface stimulus...')
-                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                    with open(self.output_data_dict_fn, 'wb') as pickle_file:
                         pickle.dump(self.cfm_output_config, pickle_file)
                 else:
                     self.logger.info('Stimulus object already defined')
@@ -969,7 +969,7 @@ class CfModeling:
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface CF model...')
-                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                    with open(self.output_data_dict_fn, 'wb') as pickle_file:
                         pickle.dump(self.cfm_output_config, pickle_file)
                 else:
                     self.logger.info('CF model already defined')
@@ -985,7 +985,7 @@ class CfModeling:
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface CF model...')
-                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                    with open(self.output_data_dict_fn, 'wb') as pickle_file:
                         pickle.dump(self.cfm_output_config, pickle_file)
                 else:
                     self.logger.info('CF model fitter already defined')
@@ -1003,7 +1003,7 @@ class CfModeling:
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface CF model...')
-                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                    with open(self.output_data_dict_fn, 'wb') as pickle_file:
                         pickle.dump(self.cfm_output_config, pickle_file)
                 else:
                     self.logger.info('CF model already fit')
