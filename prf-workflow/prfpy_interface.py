@@ -998,7 +998,7 @@ class CfModeling:
 
                 if not subsurface['is_gf']:
                     self.cfm_output_config[aperture_type][subsurf_name]['gf'].quick_grid_fit(self.sigmas)
-                    self.logger('CF model fit complete.')
+                    self.logger.info('CF model fit complete.')
                     self.cfm_output_config[aperture_type][subsurf_name]['is_gf'] = True
 
                     ## Save subsurfaces
