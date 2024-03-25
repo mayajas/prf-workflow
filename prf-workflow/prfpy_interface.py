@@ -41,10 +41,10 @@ class PrfpyStimulus:
         
         # Create stimulus object
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        self.logger.info('Creating stimulus object')
+        self.logger.info('Creating pRF stimulus object')
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
         mri_config.prfpy_output_config  = self._create_stim_obj()
-        self.logger.info('Stimulus object created')
+        self.logger.info('PRF stimulus object created')
 
     def _create_stim_obj(self):
         """
@@ -876,10 +876,10 @@ class CfStimulus:
         
         # Create stimulus object
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        self.logger.info('Creating stimulus object')
+        self.logger.info('Creating CF stimulus object')
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
         mri_config.cfm_output_config  = self._create_cf_stim_obj()
-        self.logger.info('Stimulus object created')
+        self.logger.info('CF stimulus object created')
 
 
 
@@ -906,7 +906,7 @@ class CfStimulus:
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if subsurface['stim'] is None:
+                if not subsurface['stim']:
                     self.cfm_output_config[aperture_type][subsurf_name]['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
 
                     ## Save subsurfaces
