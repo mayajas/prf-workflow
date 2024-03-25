@@ -552,7 +552,7 @@ class CreateSubsurfaces:
             self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them (use a.any())
-                if not subsurface['subsurface'] or not subsurface['surf'] or not subsurface['dist'] or not subsurface['data']:                
+                if not subsurface['subsurface'] or not subsurface['surf'] or not subsurface['dist'].any() or not subsurface['data'].any():                
                     self.logger.info('Creating subsurface: {}'.format(subsurf_name))
 
                     # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
