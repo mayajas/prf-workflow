@@ -569,16 +569,22 @@ class CreateSubsurfaces:
                     # for each vertex in subsurface, get distance to all other vertices within the subsurface
                     self.logger.info('Calculating distance matrix...')
                     self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
-                    vtx                 = 0
-                    # Use multiprocessing pool to parallelize the loop
-                    with Pool() as pool:
-                        # Define a partial function with fixed arguments
-                        partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort)
-                        # Iterate over source vertices in parallel
-                        results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
-                        for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
-                            self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx,] = result
-                            vtx += 1
+                    
+                    try:
+                        vtx                 = 0
+                        # Use multiprocessing pool to parallelize the loop
+                        with Pool() as pool:
+                            # Define a partial function with fixed arguments
+                            partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort)
+                            # Iterate over source vertices in parallel
+                            results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
+                            for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
+                                self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx,] = result
+                                vtx += 1
+                    except Exception as e:
+                        self.logger.error(f"Error: {str(e)}")
+                        self.logger.exception("Full exception traceback:")
+                        sys.exit(1)
                 
                     # Get preprocessed timeseries within the given ROI and depth
                     self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
