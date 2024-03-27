@@ -907,7 +907,7 @@ class CfStimulus:
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
                 if not subsurface['stim']:
-                    self.cfm_output_config[aperture_type][subsurf_name]['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface'],subsurface['dist'])
+                    self.cfm_output_config[aperture_type][subsurf_name]['stim'] = CFStimulus(subsurface['data'],subsurface['subsurface_translateds'],subsurface['dist'])
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface stimulus...')

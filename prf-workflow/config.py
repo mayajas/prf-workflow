@@ -663,6 +663,7 @@ class MriConfig:
                     'surf_fn': opj(self.FS_dir,self.subject_id, 'surf', self.hemi+'.'+self.equi_surf_fn_list[self.cfm_config.subsurfaces[subsurf]['depth']]),
                     'surf': [],
                     'dist': [],
+                    'subsurface_translated': [],
                     'data': [],
                     'stim': [],
                     'model': [],

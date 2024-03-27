@@ -542,8 +542,6 @@ class CreateSubsurfaces:
             with open(self.cfm_config.output_data_dict_fn, 'rb') as pickle_file:
                 self.cfm_output_config = pickle.load(pickle_file)
 
-            
-    
         ## Load cortical label
         self.logger.info('Loading cortical label...')
         self.logger.info('Cortical label: {}'.format(self.cort_label_fn))
@@ -586,10 +584,16 @@ class CreateSubsurfaces:
                         self.logger.error(f"Error: {str(e)}")
                         self.logger.exception("Full exception traceback:")
                         sys.exit(1)
-                
+                    
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface...')
+                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
+                    
+                if not subsurface['subsurface_translated'] or not subsurface['data'].any():
                     # Get preprocessed timeseries within the given ROI and depth
                     self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
-                    self.cfm_output_config[aperture_type][subsurf_name]['subsurface'], flag_str = translate_indices(self.occ_mask,self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
+                    self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'], flag_str = translate_indices(self.occ_mask,self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
                     if flag_str is not None:
                         self.logger.error(flag_str)
                         sys.exit(1)
