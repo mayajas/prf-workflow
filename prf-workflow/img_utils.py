@@ -477,7 +477,7 @@ class CleanInputData:
 
                     # Concatenate the preprocessed data across depths
                     self.logger.info('Concatenating the preprocessed data across depths...')
-                    config['preproc_data_concatenated_depths'] = np.concatenate(config['preproc_data_per_depth'],axis=1)
+                    config['preproc_data_concatenated_depths'] = np.concatenate(config['preproc_data_per_depth'],axis=0)
                     
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
