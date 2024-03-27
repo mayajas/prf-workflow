@@ -25,18 +25,19 @@ def translate_indices(original_mask, new_mask):
     # Check if new_mask is a subset of original_mask
     if not set(new_mask).issubset(set(original_mask)):
         flag_str = 'The ROI mask is not a subset of the occipital mask.'
+        return new_indices, flag_str
     else:
         flag_str = None
 
-    # Create a mapping between original indices and new indices
-    for i, idx in enumerate(original_mask):
-        mapping[idx] = i
+        # Create a mapping between original indices and new indices
+        for i, idx in enumerate(original_mask):
+            mapping[idx] = i
 
-    # Translate indices in the new mask
-    for idx in new_mask:
-        new_indices.append(mapping[idx])
+        # Translate indices in the new mask
+        for idx in new_mask:
+            new_indices.append(mapping[idx])
 
-    return new_indices, flag_str
+        return new_indices, flag_str
 
 def calculate_distance(src, subsurface, cort):
     """
