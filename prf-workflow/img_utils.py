@@ -551,7 +551,7 @@ class CreateSubsurfaces:
             self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them (use a.any())
-                if not subsurface['subsurface'] or not subsurface['surf'] or not subsurface['dist'].any() or not subsurface['data'].any():                
+                if not len(subsurface['subsurface']) or not len(subsurface['surf']) or not len(subsurface['dist']) or not len(subsurface['data']):                
                     self.logger.info('Creating subsurface: {}'.format(subsurf_name))
 
                     # Load data: roi_label contains vertex numbers of given subsurface, surf_fn contains current surface geometry
@@ -590,7 +590,7 @@ class CreateSubsurfaces:
                     with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
                         pickle.dump(self.cfm_output_config, pickle_file)
                     
-                if not subsurface['subsurface_translated'] or not subsurface['data'].any():
+                if not len(subsurface['subsurface_translated']) or not len(subsurface['data']):
                     # Get preprocessed timeseries within the given ROI and depth
                     self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
                     self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'], flag_str = translate_indices(self.occ_mask,self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
