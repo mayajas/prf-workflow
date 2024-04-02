@@ -922,12 +922,17 @@ class CfStimulus:
 class CfModeling:
     """Do connective field model fitting"""
 
-    def __init__(self, mri_config, cfm_config, logger):
+    def __init__(self, project_config, mri_config, cfm_config, logger):
         self.cf_run_config          = mri_config.cf_run_config
         self.cfm_output_config      = mri_config.cfm_output_config
         self.occ_mask_fn            = mri_config.occ_mask_fn
         self.output_data_dict_fn    = cfm_config.output_data_dict_fn
         self.sigmas                 = cfm_config.CF_sizes
+        self.verbose                = cfm_config.verbose
+        self.rsq_thresh_itfit       = cfm_config.rsq_thresh_itfit
+
+        # Number of cores to use for parallel processing of vertices
+        self.n_procs                = project_config.n_procs
 
         self.logger                 = logger
         
@@ -990,20 +995,41 @@ class CfModeling:
                 else:
                     self.logger.info('CF model fitter already defined')
 
-        # Fit CF model
+        # Fit CF model: grid fit
         for aperture_type, config in self.cfm_output_config.items():
-            self.logger.info('Fitting CF model for aperture type: {}'.format(aperture_type))
+            self.logger.info('Grid fitting CF model for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
-                if not subsurface['is_gf']:
-                    self.cfm_output_config[aperture_type][subsurf_name]['gf'].quick_grid_fit(self.sigmas)
-                    self.logger.info('CF model fit complete.')
-                    self.cfm_output_config[aperture_type][subsurf_name]['is_gf'] = True
+                if not subsurface['is_gf']['gridfit']:
+                    self.cfm_output_config[aperture_type][subsurf_name]['gf'].grid_fit(sigma_grid = self.sigmas, 
+                                                                                       verbose=self.verbose, 
+                                                                                       n_batches=self.n_procs)
+                    self.logger.info('CF model grid fit complete.')
+                    self.cfm_output_config[aperture_type][subsurf_name]['is_gf']['gridfit'] = True
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface CF model...')
                     with open(self.output_data_dict_fn, 'wb') as pickle_file:
                         pickle.dump(self.cfm_output_config, pickle_file)
                 else:
-                    self.logger.info('CF model already fit')
+                    self.logger.info('CF model grid fit already completed')
+
+        # Fit CF model: iterative fit
+        for aperture_type, config in self.cfm_output_config.items():
+            self.logger.info('Iterative fitting CF model for aperture type: {}'.format(aperture_type))
+            for subsurf_name, subsurface in config.items():
+                self.logger.info('Subsurface: {}'.format(subsurf_name))
+
+                if not subsurface['is_gf']['itfit']:
+                    self.cfm_output_config[aperture_type][subsurf_name]['gf'].iterative_fit(rsq_threshold=self.rsq_thresh_itfit, 
+                                                                                            verbose=self.verbose)
+                    self.logger.info('CF model iterative fit complete.')
+                    self.cfm_output_config[aperture_type][subsurf_name]['is_gf']['itfit'] = True
+
+                    ## Save subsurfaces
+                    self.logger.info('Saving subsurface CF model...')
+                    with open(self.output_data_dict_fn, 'wb') as pickle_file:
+                        pickle.dump(self.cfm_output_config, pickle_file)
+                else:
+                    self.logger.info('CF model iterative fit already completed')

@@ -105,7 +105,7 @@ def main(config_file,sub_idx,hem_idx):
             CfStimulus(mri_config, cfm_config, logger)
 
             ## Fit CF model
-            CfModeling(mri_config, cfm_config, logger)
+            CfModeling(project_config, mri_config, cfm_config, logger)
 
             logger.info('')
             logger.info('============================================================')

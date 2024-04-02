@@ -252,7 +252,7 @@ class PrfMappingConfig:
         # Input parameters for iterative fit
         self.rsq_thresh_itfit = class_section.get('rsq_thresh_itfit', 0.0005) # float
                                                                                 # Rsq threshold for iterative fitting. Must be between 0 and 1.         
-        self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.2)         # float
+        self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.1)         # float
                                                                                 # Rsq threshold for visualization. Must be between 0 and 1.   
         self.reference_aperture = class_section.get('reference_aperture',  None) # if not None, the pRF model fit from this aperture will be used to initialize
                                                                                     # the fitting for other apertures
@@ -369,7 +369,7 @@ class CfModelingConfig:
         self.prf_output_dir = prf_config.prf_output_dir
         self.ROI_dir        = dir_config.ROI_dir
 
-        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes = self._load_config(config_file)
+        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose = self._load_config(config_file)
 
         self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn = self._get_cf_output_fns()
 
@@ -453,7 +453,15 @@ class CfModelingConfig:
         if not isinstance(self.CF_sizes, np.ndarray):
             self.CF_sizes = np.array(self.CF_sizes)   
 
-        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes
+        # Input parameters for model fit
+        self.rsq_thresh_itfit = class_section.get('rsq_thresh_itfit', 0.0005) # float
+                                                                                # Rsq threshold for iterative fitting. Must be between 0 and 1.         
+        self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.1)         # float
+                                                                                # Rsq threshold for visualization. Must be between 0 and 1. 
+        self.verbose = class_section.get('verbose', True)               # boolean, optional
+                                                                        # whether to print out progress messages   
+
+        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose
     
     def _get_cf_output_fns(self):
 
@@ -668,7 +676,11 @@ class MriConfig:
                     'stim': [],
                     'model': [],
                     'gf': [],
-                    'is_gf': []
+                    'is_gf': {
+                        'gridfit': False,
+                        'itfit': False
+                    }
+                        
                 } for subsurf in self.cfm_config.subsurfaces
             } for key in self.cf_run_config
         }

@@ -18,7 +18,7 @@ def is_running_on_slurm():
     return "SLURM_JOB_ID" in os.environ
 
 def translate_indices(original_mask, new_mask):
-    """Used to translate the indices of the ROI mask to indices of the occipital mask"""
+    """Used to translate the indices of the ROI mask to indices of the occipital mask, across depths"""
     mapping = {}  # Mapping from original indices to new indices
     new_indices = []  # Translated indices from the new array
 
