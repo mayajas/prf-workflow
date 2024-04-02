@@ -592,7 +592,7 @@ class CreateSubsurfaces:
 
                     # Use multiprocessing pool to parallelize the loop
                     with Pool() as pool:
-                        partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort, shared_vtx=shared_vtx)
+                        partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort, src=shared_vtx)
                         results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
                         for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
                             self.cfm_output_config[aperture_type][subsurf_name]['dist'][shared_vtx.value] = result
