@@ -53,6 +53,9 @@ def translate_indices(original_mask, new_mask, depth, target_surfs):
 
     return new_indices, non_occ_vtx, flag_str
 
+def calculate_distance_helper(src, subsurface, cort):
+    return calculate_distance(src, subsurface, cort)
+
 def calculate_distance(src, subsurface, cort):
     """
     Function to calculate distance for a single source vertex.
@@ -592,7 +595,7 @@ class CreateSubsurfaces:
 
                     # Use multiprocessing pool to parallelize the loop
                     with Pool() as pool:
-                        partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort, src=shared_vtx)
+                        partial_func = partial(calculate_distance_helper, subsurface=subsurface, cort=self.cort)
                         results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
                         for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
                             self.cfm_output_config[aperture_type][subsurf_name]['dist'][shared_vtx.value] = result
