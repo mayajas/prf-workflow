@@ -9,7 +9,7 @@ from os.path import join as opj
 import pickle
 import subprocess
 import sys
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
 from functools import partial
 import surfdist as sd
 from surfdist import analysis
@@ -569,21 +569,19 @@ class CreateSubsurfaces:
                     self.logger.info('Calculating distance matrix...')
                     self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
                     
-                    try:
-                        vtx                 = 0
-                        # Use multiprocessing pool to parallelize the loop
-                        with Pool() as pool:
-                            # Define a partial function with fixed arguments
-                            partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort)
-                            # Iterate over source vertices in parallel
-                            results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
-                            for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
-                                self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx,] = result
-                                vtx += 1
-                    except Exception as e:
-                        self.logger.error(f"Error: {str(e)}")
-                        self.logger.exception("Full exception traceback:")
-                        sys.exit(1)
+
+                    # Initialize a Manager to create shared vtx object
+                    manager = Manager()
+                    shared_vtx = manager.Value('i', 0)  # Shared integer counter
+
+                    # Use multiprocessing pool to parallelize the loop
+                    with Pool() as pool:
+                        partial_func = partial(calculate_distance, subsurface=subsurface, cort=self.cort, shared_vtx=shared_vtx)
+                        results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
+                        for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
+                            self.cfm_output_config[aperture_type][subsurf_name]['dist'][shared_vtx.value] = result
+                            with shared_vtx.get_lock():
+                                shared_vtx.value += 1
                     
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface...')
