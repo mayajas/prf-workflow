@@ -17,27 +17,41 @@ from surfdist import analysis
 def is_running_on_slurm():
     return "SLURM_JOB_ID" in os.environ
 
-def translate_indices(original_mask, new_mask):
+def translate_indices(original_mask, new_mask, depth, target_surfs):
     """Used to translate the indices of the ROI mask to indices of the occipital mask, across depths"""
     mapping = {}  # Mapping from original indices to new indices
     new_indices = []  # Translated indices from the new array
 
-    # Check if new_mask is a subset of original_mask
+    # check if new_mask is a subset of original_mask
     if not set(new_mask).issubset(set(original_mask)):
-        flag_str = 'The ROI mask is not a subset of the occipital mask.'
-        return new_indices, flag_str
+        # remove the indices that are not in the original mask
+        new_mask_orig = new_mask
+        original_mask_set = set(original_mask)
+        new_mask = [x for x in new_mask if x in original_mask_set]
+
+        # write the removed index values to the flag str
+        flag_str = 'The ROI mask is not a subset of the occipital mask. Removing the following indices from the subsurface: ' + ', '.join([str(idx) for idx in set(new_mask_orig).difference(set(new_mask))])    
+
+        # write the index of the non-occipital vertices to the non_occ_vtx variable
+        non_occ_vtx = np.array([new_mask_orig.index(idx) for idx in set(new_mask_orig).difference(set(new_mask))])
     else:
         flag_str = None
 
-        # Create a mapping between original indices and new indices
-        for i, idx in enumerate(original_mask):
-            mapping[idx] = i
+        non_occ_vtx = None
 
-        # Translate indices in the new mask
-        for idx in new_mask:
-            new_indices.append(mapping[idx])
+    # Create a mapping between original indices and new indices
+    for i, idx in enumerate(original_mask):
+        mapping[idx] = i
 
-        return new_indices, flag_str
+    # Translate indices in the new mask
+    for idx in new_mask:
+        new_indices.append(mapping[idx])
+
+    # If depth > 0, then add the number of vertices in the previous depth to the new indices
+    if depth > 0:
+        new_indices = [idx + len(original_mask) * target_surfs.index(depth) for idx in new_indices]
+
+    return new_indices, non_occ_vtx, flag_str
 
 def calculate_distance(src, subsurface, cort):
     """
@@ -255,6 +269,7 @@ class CleanInputData:
         if project_config.do_cf_modeling:
             self.cf_run_config  = mri_config.cf_run_config
             self.cfm_config     = cfm_config
+            self.target_surfs   = cfm_config.target_surfs
         self.y_coord_cutoff     = prf_config.y_coord_cutoff
         self.logger             = logger
         
@@ -435,7 +450,7 @@ class CleanInputData:
                     config['masked_data'] = self.prf_run_config[aperture_type]['masked_data']
                     config['filtered_data'] = self.prf_run_config[aperture_type]['filtered_data']
                     config['preproc_data_per_depth'] = self.prf_run_config[aperture_type]['preproc_data_per_depth']
-                    config['preproc_data_concatenated_depths'] = np.concatenate(config['preproc_data_per_depth'],axis=1)
+                    config['preproc_data_concatenated_depths'] = np.concatenate([ config['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0).shape
                 
                 else:
                     # if aperture_type is not in prf_run_config
@@ -478,7 +493,7 @@ class CleanInputData:
 
                     # Concatenate the preprocessed data across depths
                     self.logger.info('Concatenating the preprocessed data across depths...')
-                    config['preproc_data_concatenated_depths'] = np.concatenate(config['preproc_data_per_depth'],axis=0)
+                    config['preproc_data_concatenated_depths'] = np.concatenate([ config['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0).shape
                     
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
@@ -519,6 +534,7 @@ class CreateSubsurfaces:
         self.occ_mask_fn        = mri_config.occ_mask_fn
         self.cfm_config         = cfm_config
         self.cort_label_fn      = mri_config.cort_label_fn
+        self.target_surfs       = cfm_config.target_surfs
         self.logger             = logger
 
         ## Load occipital mask
@@ -591,11 +607,19 @@ class CreateSubsurfaces:
                 if not len(subsurface['subsurface_translated']) or not len(subsurface['data']):
                     # Get preprocessed timeseries within the given ROI and depth
                     self.logger.info('Extracting preprocessed timeseries for current ROI and cortical surface...')
-                    self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'], flag_str = translate_indices(self.occ_mask,self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
+                    self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'], non_occ_vtx, flag_str = \
+                        translate_indices(original_mask = self.occ_mask,
+                                          new_mask = self.cfm_output_config[aperture_type][subsurf_name]['subsurface'],
+                                          depth = self.cfm_output_config[aperture_type][subsurf_name]['depth'],
+                                          target_surfs = self.target_surfs)
                     if flag_str is not None:
-                        self.logger.error(flag_str)
-                        sys.exit(1)
-                    self.cfm_output_config[aperture_type][subsurf_name]['data'] = self.cf_run_config[aperture_type]['preproc_data_per_depth'][subsurface['depth']]
+                        self.logger.info(flag_str)
+
+                        # remove the non-occipital indices from the distance matrix:
+                        self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.delete(self.cfm_output_config[aperture_type][subsurf_name]['dist'], non_occ_vtx, axis=0)
+                        self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.delete(self.cfm_output_config[aperture_type][subsurf_name]['dist'], non_occ_vtx, axis=1)
+
+                    self.cfm_output_config[aperture_type][subsurf_name]['data'] = self.cf_run_config[aperture_type]['preproc_data_concatenated_depths']
         
                     self.logger.info('Subsurface {} created.'.format(subsurf_name))
 

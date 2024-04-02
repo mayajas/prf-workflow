@@ -426,7 +426,7 @@ class CfModelingConfig:
                     self.logger.error('Value for '+key+' subsurface contains a "depth" key that is greater than n_surfs-1. Please check the configuration file.')
                     sys.exit(1)
         
-        self.target_surfs = class_section.get('target_surfs', None)
+        self.target_surfs = class_section.get('target_surfs', 'all')
         # check that target_surfs is either a list of ints or the string "all"
         if not isinstance(self.target_surfs, list) and self.target_surfs != "all":
             self.logger.error('target_surfs must be either a list of integers (corresponding to cortical depths) or the string "all". Please check the configuration file.')
@@ -442,6 +442,9 @@ class CfModelingConfig:
                 if surf < 0:
                     self.logger.error('Value in list of target surfaces (target_surfs) cannot be smaller than 0. Please check the configuration file.')
                     sys.exit(1)
+        # if target_surfs is 'all', change it to a list of all cortical depths instead
+        if self.target_surfs == 'all':
+            self.target_surfs = list(range(self.n_surfs))
                 
         
         self.CF_sizes = class_section.get('CF_sizes', None)
