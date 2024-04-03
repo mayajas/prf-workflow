@@ -457,7 +457,7 @@ class CleanInputData:
                     config['masked_data'] = self.prf_run_config[aperture_type]['masked_data']
                     config['filtered_data'] = self.prf_run_config[aperture_type]['filtered_data']
                     config['preproc_data_per_depth'] = self.prf_run_config[aperture_type]['preproc_data_per_depth']
-                    config['preproc_data_concatenated_depths'] = np.concatenate([ config['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0).shape
+                    config['preproc_data_concatenated_depths'] = np.concatenate([ config['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0)
                 
                 else:
                     # if aperture_type is not in prf_run_config
@@ -500,7 +500,7 @@ class CleanInputData:
 
                     # Concatenate the preprocessed data across depths
                     self.logger.info('Concatenating the preprocessed data across depths...')
-                    config['preproc_data_concatenated_depths'] = np.concatenate([ config['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0).shape
+                    config['preproc_data_concatenated_depths'] = np.concatenate([ config['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0)
                     
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
