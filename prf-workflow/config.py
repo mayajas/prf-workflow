@@ -360,7 +360,7 @@ class CfModelingConfig:
         roi_list (list): list of source regions
         subsurfaces (dict): dictionary containing info about sub-surfaces
         target_surfs (list or string): list of target surfaces or the string "all"
-        CF_sizes (list): list of CF sizes
+        CF_sizes (array): np.array of CF sizes
     """
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
         self.n_surfs        = project_config.n_surfs

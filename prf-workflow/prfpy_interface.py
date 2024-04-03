@@ -986,7 +986,9 @@ class CfModeling:
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
                 if not subsurface['gf']:
-                    self.cfm_output_config[aperture_type][subsurf_name]['gf'] = CFFitter(data=self.cf_run_config[aperture_type]['preproc_data_concatenated_depths'],model=subsurface['model'])
+                    self.cfm_output_config[aperture_type][subsurf_name]['gf'] = CFFitter(data=self.cf_run_config[aperture_type]['preproc_data_concatenated_depths'],
+                                                                                         model=subsurface['model'],
+                                                                                         fit_hrf=False) #TODO: add HRF fitting
 
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface CF model...')
