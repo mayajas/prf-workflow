@@ -598,17 +598,18 @@ class CreateSubsurfaces:
                     shared_vtx = manager.Value('i', 0)  # Shared integer counter
                     lock = Lock()  # Lock for synchronization
 
+                    # Initialize a Manager to create shared vtx object and lock
+                    manager = Manager()
+                    shared_vtx = manager.Value('i', 0)  # Shared integer counter
+                    lock = manager.Lock()  # Lock for synchronization
+
                     # Use multiprocessing pool to parallelize the loop
                     with Pool() as pool:
                         partial_func = partial(calculate_distance_helper, subsurface=subsurface, cort=self.cort, shared_vtx=shared_vtx, lock=lock)
                         results = pool.starmap(partial_func, [(src,) for src in self.cfm_output_config[aperture_type][subsurf_name]['subsurface']])
                         for vtx_index, result in results:
                             self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx_index] = result
-                    
-                    ## Save subsurfaces
-                    self.logger.info('Saving subsurface...')
-                    with open(self.cfm_config.output_data_dict_fn, 'wb') as pickle_file:
-                        pickle.dump(self.cfm_output_config, pickle_file)
+
                     
                 if not len(subsurface['subsurface_translated']) or not len(subsurface['data']):
                     # Get preprocessed timeseries within the given ROI and depth
