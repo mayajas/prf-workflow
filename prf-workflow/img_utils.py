@@ -9,7 +9,7 @@ from os.path import join as opj
 import pickle
 import subprocess
 import sys
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool, Manager, Lock
 from functools import partial
 import surfdist as sd
 from surfdist import analysis
@@ -53,8 +53,12 @@ def translate_indices(original_mask, new_mask, depth, target_surfs):
 
     return new_indices, non_occ_vtx, flag_str
 
-def calculate_distance_helper(src, subsurface, cort):
-    return calculate_distance(src, subsurface, cort)
+def calculate_distance_helper(src, subsurface, cort, shared_vtx, lock):
+    result = calculate_distance(src, subsurface, cort)
+    with lock:
+        shared_vtx.value += 1
+        vtx_index = shared_vtx.value - 1
+    return vtx_index, result
 
 def calculate_distance(src, subsurface, cort):
     """
@@ -592,15 +596,14 @@ class CreateSubsurfaces:
                     # Initialize a Manager to create shared vtx object
                     manager = Manager()
                     shared_vtx = manager.Value('i', 0)  # Shared integer counter
+                    lock = Lock()  # Lock for synchronization
 
                     # Use multiprocessing pool to parallelize the loop
                     with Pool() as pool:
-                        partial_func = partial(calculate_distance_helper, subsurface=subsurface, cort=self.cort)
-                        results = pool.map(partial_func, self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])
-                        for result, src in zip(results, self.cfm_output_config[aperture_type][subsurf_name]['subsurface']):
-                            self.cfm_output_config[aperture_type][subsurf_name]['dist'][shared_vtx.value] = result
-                            with shared_vtx.get_lock():
-                                shared_vtx.value += 1
+                        partial_func = partial(calculate_distance_helper, subsurface=subsurface, cort=self.cort, shared_vtx=shared_vtx, lock=lock)
+                        results = pool.starmap(partial_func, [(src,) for src in self.cfm_output_config[aperture_type][subsurf_name]['subsurface']])
+                        for vtx_index, result in results:
+                            self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx_index] = result
                     
                     ## Save subsurfaces
                     self.logger.info('Saving subsurface...')
