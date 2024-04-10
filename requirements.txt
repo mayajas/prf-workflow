@@ -7,4 +7,4 @@ nipype
 nibabel
 fslpy
 git+https://github.com/mayajas/surfdist.git@master#egg=surfdist
-git+https://github.com/mayajas/prfpy.git@master#egg=prfpy
+git+https://github.com/mayajas/prfpy.git@main#egg=prfpy
