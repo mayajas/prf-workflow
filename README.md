@@ -32,6 +32,10 @@ The package then carries out the following steps:
 2. From inside prf-workflow package directory: pip install -e .
 3. Clone surface_tools: git clone https://github.com/kwagstyl/surface_tools. Add the corresponding directory in the config.py file under surface_tools_dir.
 
+If a package from the requirements.txt is updated (in particular, prfpy), run the following lines to upgrade the packages:
+pip uninstall <package-name>
+pip install -r requirements.txt
+
 ## License
 
 prf-workflow is licensed under the terms of the GPL-v3 license. See "LICENSE" file for information on software versions, terms & conditions for usage, and a disclaimer.
