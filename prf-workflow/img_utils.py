@@ -33,7 +33,7 @@ def translate_indices(original_mask, new_mask, depth, target_surfs):
         flag_str = 'The ROI mask is not a subset of the occipital mask. Removing the following indices from the subsurface: ' + ', '.join([str(idx) for idx in set(new_mask_orig).difference(set(new_mask))])    
 
         # write the index of the non-occipital vertices to the non_occ_vtx variable
-        non_occ_vtx = np.array([new_mask_orig.index(idx) for idx in set(new_mask_orig).difference(set(new_mask))])
+        non_occ_vtx = np.where(np.isin(new_mask_orig, np.setdiff1d(new_mask_orig, new_mask)))[0]
     else:
         flag_str = None
 
