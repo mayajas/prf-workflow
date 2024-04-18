@@ -948,14 +948,15 @@ class CfModeling:
         self.cf_run_config          = mri_config.cf_run_config
         self.cfm_output_config      = mri_config.cfm_output_config
         self.occ_mask_fn            = mri_config.occ_mask_fn
-        self.target_surfs           = cfm_config.n_surfs
+        self.target_surfs           = cfm_config.target_surfs
         self.output_data_dict_fn    = cfm_config.output_data_dict_fn
         self.sigmas                 = cfm_config.CF_sizes
         self.verbose                = cfm_config.verbose
         self.rsq_thresh_itfit       = cfm_config.rsq_thresh_itfit
 
-        # Number of cores to use for parallel processing of vertices
+        # Number of cores to use for parallel processing of vertices, number of surfaces
         self.n_procs                = project_config.n_procs
+        self.n_surfs                = project_config.n_surfs
 
         # Logger
         self.logger                 = logger
@@ -1088,9 +1089,8 @@ class CfModeling:
         # Extract pRF parameter estimates from iterative fit result
         if not os.path.exists(self.cfm_param_fn):
             self.logger.info('{} does not yet exist'.format(self.cfm_param_fn))
+            # For single target surfaces
             if len(self.target_surfs) == 1:
-                # For single target surfaces
-            
                 # Initialize pRF parameters 
                 cf_params      = {
                     key:{
@@ -1128,8 +1128,8 @@ class CfModeling:
                         cf_params[aperture_type][subsurf]['baseline']       = baseline
                         cf_params[aperture_type][subsurf]['total_rsq']      = total_rsq
 
-            elif len(self.target_surfs) > 1:
             # For multiple target surfaces
+            elif len(self.target_surfs) > 1:
                 # Initialize pRF parameters 
                 cf_params      = {
                     key:{

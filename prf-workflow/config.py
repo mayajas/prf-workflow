@@ -446,7 +446,6 @@ class CfModelingConfig:
         if self.target_surfs == 'all':
             self.target_surfs = list(range(self.n_surfs))
                 
-        
         self.CF_sizes = class_section.get('CF_sizes', None)
         # check that CF_sizes is not empty
         if not self.CF_sizes:
