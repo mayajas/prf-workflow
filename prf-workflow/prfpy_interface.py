@@ -948,6 +948,7 @@ class CfModeling:
         self.cf_run_config          = mri_config.cf_run_config
         self.cfm_output_config      = mri_config.cfm_output_config
         self.occ_mask_fn            = mri_config.occ_mask_fn
+        self.cfm_config             = cfm_config
         self.target_surfs           = cfm_config.target_surfs
         self.output_data_dict_fn    = cfm_config.output_data_dict_fn
         self.sigmas                 = cfm_config.CF_sizes
@@ -1104,29 +1105,29 @@ class CfModeling:
                     } for key in self.cf_run_config
                 }
 
-                for aperture_type in self.cf_run_config:
+                for aperture_type, config in self.cfm_output_config.items():
                     self.logger.info(f"[[{aperture_type} aperture]]")
-                    for subsurf in self.cfm_config.subsurfaces:
-                        self.logger.info(f"[[{subsurf} subsurface]]")
+                    for subsurf_name, subsurface in config.items():
+                        self.logger.info(f"[[{subsurf_name} subsurface]]")
 
                         # Extract iterative search parameters
-                        vert_centers    = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,0]
-                        prf_size        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,1]
-                        beta            = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,2]
-                        baseline        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,3]
-                        total_rsq       = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,-1]
+                        vert_centers    = subsurface['gf'].iterative_search_params[:,0]
+                        prf_size        = subsurface['gf'].iterative_search_params[:,1]
+                        beta            = subsurface['gf'].iterative_search_params[:,2]
+                        baseline        = subsurface['gf'].iterative_search_params[:,3]
+                        total_rsq       = subsurface['gf'].iterative_search_params[:,-1]
 
                         # Translate vert_centers back to original (whole-brain) space
-                        original_indices = self.cfm_output_config[aperture_type][subsurf]['subsurface']
-                        new_indices = np.array(self.cfm_output_config[aperture_type][subsurf]['subsurface_translated'])
+                        original_indices = subsurface['subsurface']
+                        new_indices = np.array(subsurface['subsurface_translated'])
                         vert_centers = translate_indices_back(original_indices, new_indices, vert_centers)
 
                         # Save parameters
-                        cf_params[aperture_type][subsurf]['vert_centers']   = vert_centers
-                        cf_params[aperture_type][subsurf]['prf_size']       = prf_size
-                        cf_params[aperture_type][subsurf]['beta']           = beta
-                        cf_params[aperture_type][subsurf]['baseline']       = baseline
-                        cf_params[aperture_type][subsurf]['total_rsq']      = total_rsq
+                        cf_params[aperture_type][subsurf_name]['vert_centers']   = vert_centers
+                        cf_params[aperture_type][subsurf_name]['prf_size']       = prf_size
+                        cf_params[aperture_type][subsurf_name]['beta']           = beta
+                        cf_params[aperture_type][subsurf_name]['baseline']       = baseline
+                        cf_params[aperture_type][subsurf_name]['total_rsq']      = total_rsq
 
             # For multiple target surfaces
             elif len(self.target_surfs) > 1:
@@ -1143,21 +1144,21 @@ class CfModeling:
                     } for key in self.cf_run_config
                 }
 
-                for aperture_type in self.cf_run_config:
+                for aperture_type, config in self.cfm_output_config.items():
                     self.logger.info(f"[[{aperture_type} aperture]]")
-                    for subsurf in self.cfm_config.subsurfaces:
-                        self.logger.info(f"[[{subsurf} subsurface]]")
+                    for subsurf_name, subsurface in config.items():
+                        self.logger.info(f"[[{subsurf_name} subsurface]]")
 
                         # Extract iterative search parameters
-                        vert_centers    = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,0]
-                        prf_size        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,1]
-                        beta            = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,2]
-                        baseline        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,3]
-                        total_rsq       = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,-1]
+                        vert_centers    = subsurface['gf'].iterative_search_params[:,0]
+                        prf_size        = subsurface['gf'].iterative_search_params[:,1]
+                        beta            = subsurface['gf'].iterative_search_params[:,2]
+                        baseline        = subsurface['gf'].iterative_search_params[:,3]
+                        total_rsq       = subsurface['gf'].iterative_search_params[:,-1]
 
                         # Translate vert_centers back to original (whole-brain) space
-                        original_indices = self.cfm_output_config[aperture_type][subsurf]['subsurface']
-                        new_indices = np.array(self.cfm_output_config[aperture_type][subsurf]['subsurface_translated'])
+                        original_indices = subsurface['subsurface']
+                        new_indices = np.array(subsurface['subsurface_translated'])
                         vert_centers = translate_indices_back(original_indices, new_indices, vert_centers)
 
                         # Reshape vert_centers, prf_size, beta, baseline, total_rsq to n_surfs by n_vtx
@@ -1169,11 +1170,11 @@ class CfModeling:
 
                         # Save parameters
                         for depth in range(0,self.n_surfs):
-                            cf_params[aperture_type][subsurf]['vert_centers'][depth]   = vert_centers[depth,:]
-                            cf_params[aperture_type][subsurf]['prf_size'][depth]       = prf_size[depth,:]
-                            cf_params[aperture_type][subsurf]['beta'][depth]           = beta[depth,:]
-                            cf_params[aperture_type][subsurf]['baseline'][depth]       = baseline[depth,:]
-                            cf_params[aperture_type][subsurf]['total_rsq'][depth]      = total_rsq[depth,:]
+                            cf_params[aperture_type][subsurf_name]['vert_centers'][depth]   = vert_centers[depth,:]
+                            cf_params[aperture_type][subsurf_name]['prf_size'][depth]       = prf_size[depth,:]
+                            cf_params[aperture_type][subsurf_name]['beta'][depth]           = beta[depth,:]
+                            cf_params[aperture_type][subsurf_name]['baseline'][depth]       = baseline[depth,:]
+                            cf_params[aperture_type][subsurf_name]['total_rsq'][depth]      = total_rsq[depth,:]
 
             # Save pRF parameters
             with open(self.cfm_param_fn, 'wb') as pickle_file:
