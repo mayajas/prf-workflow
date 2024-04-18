@@ -18,6 +18,22 @@ def pckl_suffix(filename):
         """
         return filename + '.pckl'
 
+def translate_indices_back(original_indices, new_indices, vert_centres):
+    # Create a mapping from new indices (subset of occ mask) to original indices (subset of whole brain vertices)
+    mapping = {new_idx: original_idx for original_idx, new_idx in zip(original_indices, new_indices)}
+    
+    # Translate vert_centres to original index values
+    original_vert_centres = []
+    for new_idx in vert_centres:
+        if new_idx in mapping:
+            original_vert_centres.append(mapping[new_idx])
+        else:
+            original_vert_centres.append(None)  # or any other desired value, such as np.nan for NaN
+
+    original_vert_centres = np.array(original_vert_centres)
+        
+    return original_vert_centres
+
 class PrfpyStimulus:
     """
     Create a stimulus object for prfpy.
@@ -82,7 +98,6 @@ class PrfpyStimulus:
            
         return self.prfpy_output_config
         
-
 class PrfFitting:
     """
     Fit pRF model.
@@ -579,7 +594,6 @@ class PrfFitting:
                     else:
                         self.logger.info('Iterative fit already performed on depth ' + str(depth))         
 
-
     def _get_prf_param_fn(self,which_surf,which_model):
 
         if which_surf == 'single' or which_surf == 'avg':
@@ -595,11 +609,10 @@ class PrfFitting:
 
         return pRF_param_fn
 
-
     def _get_prf_params(self,which_model,which_surf):
         """
         Extract pRF parameters from model fitter.
-        """""
+        """
         ## PRF parameter estimates
         pRF_param_fn = self._get_prf_param_fn(which_surf,which_model)
         
@@ -861,10 +874,14 @@ class PrfFitting:
             if not os.path.exists(self.prf_config.rsq_map_mgh):
                 nib.save(nib.freesurfer.mghformat.MGHImage(unmask_rsq.astype(np.float32, order = "C"),affine=affine),self.prf_config.rsq_map_mgh)
 
-
-
 class CfStimulus:
-    """Create stimulus object for CF modeling."""
+    """
+    Create stimulus object for CF modeling.
+    Args:
+        mri_config (MriConfig object): MRI configuration object.
+        cfm_config (CfmConfig object): CF modeling configuration object.
+        logger (Logger object): Logger object.
+    """
 
     def __init__(self, mri_config, cfm_config, logger):
         self.cf_run_config          = mri_config.cf_run_config
@@ -880,8 +897,6 @@ class CfStimulus:
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
         mri_config.cfm_output_config  = self._create_cf_stim_obj()
         self.logger.info('CF stimulus object created')
-
-
 
     def _create_cf_stim_obj(self):
         """
@@ -918,14 +933,22 @@ class CfStimulus:
             
         return self.cfm_output_config
     
-
 class CfModeling:
-    """Do connective field model fitting"""
+    """
+    Do connective field model fitting
+    Args:
+        project_config (ProjectConfig object): Project configuration object.
+        mri_config (MriConfig object): MRI configuration object.
+        cfm_config (CfmConfig object): CF modeling configuration object.
+        logger (Logger object): Logger object.
+    """
 
     def __init__(self, project_config, mri_config, cfm_config, logger):
+        # Load configuration parameters
         self.cf_run_config          = mri_config.cf_run_config
         self.cfm_output_config      = mri_config.cfm_output_config
         self.occ_mask_fn            = mri_config.occ_mask_fn
+        self.target_surfs           = cfm_config.n_surfs
         self.output_data_dict_fn    = cfm_config.output_data_dict_fn
         self.sigmas                 = cfm_config.CF_sizes
         self.verbose                = cfm_config.verbose
@@ -934,15 +957,36 @@ class CfModeling:
         # Number of cores to use for parallel processing of vertices
         self.n_procs                = project_config.n_procs
 
+        # Logger
         self.logger                 = logger
+
+        # CFM output filenames
+        self.cfm_param_fn           = cfm_config.cfm_param_fn
+
+        ## Load occipital mask
+        logger.info('Loading occipital mask...')
+        with open(self.occ_mask_fn, 'rb') as pickle_file:
+            [self.occ_mask,_] = pickle.load(pickle_file)
         
         # Fit CF model
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
         self.logger.info('Fitting CF model')
         self.logger.info('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
-        self._fit_cf_model()
+        self.logger.info('Nr processors: ' + str(self.n_procs))
+        self._cfm_fitting()
         self.logger.info('CF model fit complete')
 
+    def _cfm_fitting(self):
+        """
+        Main CF model fitting function.
+        """
+        # Fit the CF model
+        self.logger.info('%%%%%%%%% Fitting CF model %%%%%%%%%')
+        self._fit_cf_model()
+
+        # then extract CFM parameters
+        self.logger.info('Extracting CFM parameters...')
+        self._get_cfm_params()
 
     def _fit_cf_model(self):
         """
@@ -1035,3 +1079,106 @@ class CfModeling:
                         pickle.dump(self.cfm_output_config, pickle_file)
                 else:
                     self.logger.info('CF model iterative fit already completed')
+
+    def _get_cfm_params(self):
+        """
+        Extract CFM parameters from model fitter.
+        """
+
+        # Extract pRF parameter estimates from iterative fit result
+        if not os.path.exists(self.cfm_param_fn):
+            self.logger.info('{} does not yet exist'.format(self.cfm_param_fn))
+            if len(self.target_surfs) == 1:
+                # For single target surfaces
+            
+                # Initialize pRF parameters 
+                cf_params      = {
+                    key:{
+                        subsurf: {
+                            'vert_centers': [],
+                            'prf_size': [],
+                            'beta': [],
+                            'baseline': [],
+                            'total_rsq': []
+                        } for subsurf in self.cfm_config.subsurfaces
+                    } for key in self.cf_run_config
+                }
+
+                for aperture_type in self.cf_run_config:
+                    self.logger.info(f"[[{aperture_type} aperture]]")
+                    for subsurf in self.cfm_config.subsurfaces:
+                        self.logger.info(f"[[{subsurf} subsurface]]")
+
+                        # Extract iterative search parameters
+                        vert_centers    = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,0]
+                        prf_size        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,1]
+                        beta            = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,2]
+                        baseline        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,3]
+                        total_rsq       = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,-1]
+
+                        # Translate vert_centers back to original (whole-brain) space
+                        original_indices = self.cfm_output_config[aperture_type][subsurf]['subsurface']
+                        new_indices = np.array(self.cfm_output_config[aperture_type][subsurf]['subsurface_translated'])
+                        vert_centers = translate_indices_back(original_indices, new_indices, vert_centers)
+
+                        # Save parameters
+                        cf_params[aperture_type][subsurf]['vert_centers']   = vert_centers
+                        cf_params[aperture_type][subsurf]['prf_size']       = prf_size
+                        cf_params[aperture_type][subsurf]['beta']           = beta
+                        cf_params[aperture_type][subsurf]['baseline']       = baseline
+                        cf_params[aperture_type][subsurf]['total_rsq']      = total_rsq
+
+            elif len(self.target_surfs) > 1:
+            # For multiple target surfaces
+                # Initialize pRF parameters 
+                cf_params      = {
+                    key:{
+                        subsurf: {
+                            'vert_centers': [0] * self.n_surfs,
+                            'prf_size': [0] * self.n_surfs,
+                            'beta': [0] * self.n_surfs,
+                            'baseline': [0] * self.n_surfs,
+                            'total_rsq': [0] * self.n_surfs
+                        } for subsurf in self.cfm_config.subsurfaces
+                    } for key in self.cf_run_config
+                }
+
+                for aperture_type in self.cf_run_config:
+                    self.logger.info(f"[[{aperture_type} aperture]]")
+                    for subsurf in self.cfm_config.subsurfaces:
+                        self.logger.info(f"[[{subsurf} subsurface]]")
+
+                        # Extract iterative search parameters
+                        vert_centers    = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,0]
+                        prf_size        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,1]
+                        beta            = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,2]
+                        baseline        = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,3]
+                        total_rsq       = self.cfm_output_config[aperture_type][subsurf]['gf'].iterative_search_params[:,-1]
+
+                        # Translate vert_centers back to original (whole-brain) space
+                        original_indices = self.cfm_output_config[aperture_type][subsurf]['subsurface']
+                        new_indices = np.array(self.cfm_output_config[aperture_type][subsurf]['subsurface_translated'])
+                        vert_centers = translate_indices_back(original_indices, new_indices, vert_centers)
+
+                        # Reshape vert_centers, prf_size, beta, baseline, total_rsq to n_surfs by n_vtx
+                        vert_centers = vert_centers.reshape(self.n_surfs,-1)
+                        prf_size = prf_size.reshape(self.n_surfs,-1)
+                        beta = beta.reshape(self.n_surfs,-1)
+                        baseline = baseline.reshape(self.n_surfs,-1)
+                        total_rsq = total_rsq.reshape(self.n_surfs,-1)  
+
+                        # Save parameters
+                        for depth in range(0,self.n_surfs):
+                            cf_params[aperture_type][subsurf]['vert_centers'][depth]   = vert_centers[depth,:]
+                            cf_params[aperture_type][subsurf]['prf_size'][depth]       = prf_size[depth,:]
+                            cf_params[aperture_type][subsurf]['beta'][depth]           = beta[depth,:]
+                            cf_params[aperture_type][subsurf]['baseline'][depth]       = baseline[depth,:]
+                            cf_params[aperture_type][subsurf]['total_rsq'][depth]      = total_rsq[depth,:]
+
+            # Save pRF parameters
+            with open(self.cfm_param_fn, 'wb') as pickle_file:
+                pickle.dump(cf_params, pickle_file)
+                    
+        elif os.path.exists(self.cfm_param_fn):
+            with open(self.cfm_param_fn,'rb') as pickle_file:
+                cf_params = pickle.load(pickle_file)

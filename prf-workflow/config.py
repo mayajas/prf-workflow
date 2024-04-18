@@ -371,7 +371,7 @@ class CfModelingConfig:
 
         self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose = self._load_config(config_file)
 
-        self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn = self._get_cf_output_fns()
+        self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn, self.cfm_param_fn = self._get_cf_output_fns()
 
     def _load_config(self, config_file):
         with open(config_file) as f:
@@ -478,7 +478,10 @@ class CfModelingConfig:
         input_data_dict_fn      = opj(cfm_output_dir,self.hemi+'_input_data.pckl')
         output_data_dict_fn     = opj(cfm_output_dir,self.hemi+'_output_data.pckl')
 
-        return cfm_output_dir, input_data_dict_fn, output_data_dict_fn
+        # prfpy outputs
+        cfm_param_fn      = opj(cfm_output_dir,self.hemi+'_cfm_params.pckl')
+
+        return cfm_output_dir, input_data_dict_fn, output_data_dict_fn, cfm_param_fn
 
 class MriConfig:
     """
