@@ -1178,8 +1178,4 @@ class CfModeling:
 
             # Save pRF parameters
             with open(self.cfm_param_fn, 'wb') as pickle_file:
-                pickle.dump(cf_params, pickle_file)
-                    
-        elif os.path.exists(self.cfm_param_fn):
-            with open(self.cfm_param_fn,'rb') as pickle_file:
-                cf_params = pickle.load(pickle_file)
+                pickle.dump(cf_params, pickle_file)        
