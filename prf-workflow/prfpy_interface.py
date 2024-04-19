@@ -18,21 +18,15 @@ def pckl_suffix(filename):
         """
         return filename + '.pckl'
 
-def translate_indices_back(original_indices, new_indices, vert_centres):
-    # Create a mapping from new indices (subset of occ mask) to original indices (subset of whole brain vertices)
-    mapping = {new_idx: original_idx for original_idx, new_idx in zip(original_indices, new_indices)}
-    
-    # Translate vert_centres to original index values
-    original_vert_centres = []
-    for new_idx in vert_centres:
-        if new_idx in mapping:
-            original_vert_centres.append(mapping[new_idx])
-        else:
-            original_vert_centres.append(None)  # or any other desired value, such as np.nan for NaN
-
-    original_vert_centres = np.array(original_vert_centres)
+def translate_indices_singlesurf(occ_mask, subsurface_translated, depth, target_surfs):
+    """
+    Translate indices to single surface indices.
+    """
+    occ_vert_centres = subsurface_translated
+    if depth > 0:
+        occ_vert_centres = [idx - len(occ_mask) * target_surfs.index(depth) for idx in occ_vert_centres]
         
-    return original_vert_centres
+    return occ_vert_centres
 
 class PrfpyStimulus:
     """
@@ -1117,10 +1111,9 @@ class CfModeling:
                         baseline        = subsurface['gf'].iterative_search_params[:,3]
                         total_rsq       = subsurface['gf'].iterative_search_params[:,-1]
 
-                        # Translate vert_centers back to original (whole-brain) space
-                        original_indices = subsurface['subsurface']
-                        new_indices = np.array(subsurface['subsurface_translated'])
-                        vert_centers = translate_indices_back(original_indices, new_indices, vert_centers)
+                        # Translate vert_centers back to single surface indices
+                        vert_centers = translate_indices_singlesurf(occ_mask = self.occ_mask, subsurface_translated = subsurface['subsurface_translated'], 
+                                               depth = subsurface['depth'], target_surfs = self.target_surfs)
 
                         # Save parameters
                         cf_params[aperture_type][subsurf_name]['vert_centers']   = vert_centers
@@ -1156,10 +1149,9 @@ class CfModeling:
                         baseline        = subsurface['gf'].iterative_search_params[:,3]
                         total_rsq       = subsurface['gf'].iterative_search_params[:,-1]
 
-                        # Translate vert_centers back to original (whole-brain) space
-                        original_indices = subsurface['subsurface']
-                        new_indices = np.array(subsurface['subsurface_translated'])
-                        vert_centers = translate_indices_back(original_indices, new_indices, vert_centers)
+                        # Translate vert_centers back to single surface indices
+                        vert_centers = translate_indices_singlesurf(occ_mask = self.occ_mask, subsurface_translated = subsurface['subsurface_translated'], 
+                                               depth = subsurface['depth'], target_surfs = self.target_surfs)
 
                         # Reshape vert_centers, prf_size, beta, baseline, total_rsq to n_surfs by n_vtx
                         vert_centers = vert_centers.reshape(self.n_surfs,-1)
