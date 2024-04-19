@@ -25,6 +25,8 @@ def translate_indices_singlesurf(occ_mask, subsurface_translated, depth, target_
     occ_vert_centres = subsurface_translated
     if depth > 0:
         occ_vert_centres = [idx - len(occ_mask) * target_surfs.index(depth) for idx in occ_vert_centres]
+
+    occ_vert_centres = np.array(occ_vert_centres)
         
     return occ_vert_centres
 
