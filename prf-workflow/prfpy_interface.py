@@ -18,15 +18,14 @@ def pckl_suffix(filename):
         """
         return filename + '.pckl'
 
-def translate_indices_singlesurf(occ_mask, subsurface_translated, depth, target_surfs):
+def translate_indices_singlesurf(occ_mask, vert_centers_across_depth, depth, target_surfs):
     """
     Translate indices to single surface indices.
     """
-    occ_vert_centres = subsurface_translated
+    occ_vert_centres = vert_centers_across_depth
     if depth > 0:
         occ_vert_centres = [idx - len(occ_mask) * target_surfs.index(depth) for idx in occ_vert_centres]
-
-    occ_vert_centres = np.array(occ_vert_centres)
+        occ_vert_centres = np.array(occ_vert_centres)
         
     return occ_vert_centres
 
@@ -1114,7 +1113,7 @@ class CfModeling:
                         total_rsq       = subsurface['gf'].iterative_search_params[:,-1]
 
                         # Translate vert_centers back to single surface indices
-                        vert_centers = translate_indices_singlesurf(occ_mask = self.occ_mask, subsurface_translated = subsurface['subsurface_translated'], 
+                        vert_centers = translate_indices_singlesurf(occ_mask = self.occ_mask, vert_centers_across_depth = vert_centers, 
                                                depth = subsurface['depth'], target_surfs = self.target_surfs)
 
                         # Save parameters
@@ -1152,7 +1151,7 @@ class CfModeling:
                         total_rsq       = subsurface['gf'].iterative_search_params[:,-1]
 
                         # Translate vert_centers back to single surface indices
-                        vert_centers = translate_indices_singlesurf(occ_mask = self.occ_mask, subsurface_translated = subsurface['subsurface_translated'], 
+                        vert_centers = translate_indices_singlesurf(occ_mask = self.occ_mask, vert_centers_across_depth = vert_centers, 
                                                depth = subsurface['depth'], target_surfs = self.target_surfs)
 
                         # Reshape vert_centers, prf_size, beta, baseline, total_rsq to n_surfs by n_vtx
