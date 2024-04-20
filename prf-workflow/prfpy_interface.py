@@ -1013,7 +1013,8 @@ class CfModeling:
             #nonlinear_constraint_obj = NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0)
             
             # Update the constraints list with the dictionary representation of the constraint
-            constraints = [NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0)]
+            constraints = [NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 
+                                               lb=min_vtx, ub=max_vtx, keep_feasible=True)]
         else:
             constraints = None
 
