@@ -11,6 +11,7 @@ import pickle
 import subprocess
 import numpy as np
 import nibabel as nib
+from scipy.optimize import NonlinearConstraint
 
 def pckl_suffix(filename):
         """
@@ -28,6 +29,10 @@ def translate_indices_singlesurf(occ_mask, vert_centers_across_depth, depth, tar
         occ_vert_centres = np.array(occ_vert_centres)
         
     return occ_vert_centres
+
+def vert_idx_constraint(params, vert_centers):
+    vert_center = params[0]  # Extract the first parameter
+    return vert_center - np.round(vert_center) if np.round(vert_center) in vert_centers else np.inf
 
 class PrfpyStimulus:
     """
@@ -949,6 +954,8 @@ class CfModeling:
         self.sigmas                 = cfm_config.CF_sizes
         self.verbose                = cfm_config.verbose
         self.rsq_thresh_itfit       = cfm_config.rsq_thresh_itfit
+        self.use_bounds             = cfm_config.use_bounds
+        self.use_constraints        = cfm_config.use_constraints
 
         # Number of cores to use for parallel processing of vertices, number of surfaces
         self.n_procs                = project_config.n_procs
@@ -984,6 +991,33 @@ class CfModeling:
         # then extract CFM parameters
         self.logger.info('Extracting CFM parameters...')
         self._get_cfm_params()
+    
+    def _define_bounds_and_constraints(self,aperture_type,subsurf_name):
+        """
+        Define bounds for CF model fitting.
+        Parameter order: 'vert_centers','prf_size','beta','baseline','total_rsq'
+        """
+        vert_centers = np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'])
+        min_vtx = min(np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated']))
+        max_vtx = max(np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated']))
+
+        if self.use_bounds:
+            bounds = [(min_vtx, max_vtx), 
+                      None, 
+                      None,
+                      None]
+        else:
+            bounds = None
+
+        if self.use_constraints:
+            constraints = [NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0),
+                           None,
+                           None,
+                           None]
+        else:
+            constraints = None
+
+        return bounds, constraints
 
     def _fit_cf_model(self):
         """
@@ -1002,7 +1036,6 @@ class CfModeling:
         else:
             self.logger.error(f'Output data dict does not exist: {self.output_data_dict_fn}')
             sys.exit(1)
-
 
         # Define CF model
         for aperture_type, config in self.cfm_output_config.items():
@@ -1065,8 +1098,14 @@ class CfModeling:
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
 
                 if not subsurface['is_gf']['itfit']:
+                    # Define bounds and constraints, if any
+                    bounds, constraints = self._define_bounds_and_constraints(aperture_type,subsurf_name)
+                    
+                    # Fit CF model: iterative fit
                     self.cfm_output_config[aperture_type][subsurf_name]['gf'].iterative_fit(rsq_threshold=self.rsq_thresh_itfit, 
-                                                                                            verbose=self.verbose)
+                                                                                            verbose=self.verbose,
+                                                                                            bounds=bounds,
+                                                                                            constraints=constraints)
                     self.logger.info('CF model iterative fit complete.')
                     self.cfm_output_config[aperture_type][subsurf_name]['is_gf']['itfit'] = True
 

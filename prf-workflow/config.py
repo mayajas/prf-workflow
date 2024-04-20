@@ -369,7 +369,7 @@ class CfModelingConfig:
         self.prf_output_dir = prf_config.prf_output_dir
         self.ROI_dir        = dir_config.ROI_dir
 
-        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose = self._load_config(config_file)
+        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints = self._load_config(config_file)
 
         self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn, self.cfm_param_fn = self._get_cf_output_fns()
 
@@ -462,8 +462,11 @@ class CfModelingConfig:
                                                                                 # Rsq threshold for visualization. Must be between 0 and 1. 
         self.verbose = class_section.get('verbose', True)               # boolean, optional
                                                                         # whether to print out progress messages   
-
-        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose
+        self.use_bounds = class_section.get('use_bounds', True)             # boolean, optional
+                                                                            # whether to use bounds for the CF model fit
+        self.use_constraints = class_section.get('use_constraints', True)   # boolean, optional
+                                                                            # whether to use constraints for the CF model fit
+        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints
     
     def _get_cf_output_fns(self):
 
