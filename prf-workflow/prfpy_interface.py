@@ -32,7 +32,7 @@ def translate_indices_singlesurf(occ_mask, vert_centers_across_depth, depth, tar
 
 def vert_idx_constraint(params, vert_centers):
     vert_center = params[0]  # Extract the first parameter
-    return vert_center - np.round(vert_center) if np.round(vert_center) in vert_centers else np.inf
+    return vert_center if vert_center in vert_centers else 0  # Return the parameter value if it belongs to vert_centers, otherwise return 0
 
 class PrfpyStimulus:
     """
@@ -1013,7 +1013,7 @@ class CfModeling:
             #nonlinear_constraint_obj = NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0)
             
             # Update the constraints list with the dictionary representation of the constraint
-            constraints = [{'type':'eq', 'fun': lambda params: vert_idx_constraint(params, vert_centers)}]
+            constraints = [NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0)]
         else:
             constraints = None
 
