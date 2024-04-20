@@ -1002,10 +1002,10 @@ class CfModeling:
         max_vtx = max(np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated']))
 
         if self.use_bounds:
-            bounds = [(min_vtx, max_vtx), 
-                      None, 
-                      None,
-                      None]
+            bounds = [(min_vtx, max_vtx),  # Bounds for the first parameter
+                        (None, None),         
+                        (None, None),         
+                        (None, None)] 
         else:
             bounds = None
 
