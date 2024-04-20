@@ -1012,16 +1012,8 @@ class CfModeling:
         if self.use_constraints:
             nonlinear_constraint_obj = NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0)
             
-            # Convert the NonlinearConstraint object into a dictionary representation
-            nonlinear_constraint_dict = {'type': 'eq', 'fun': nonlinear_constraint_obj.fun}
-
             # Update the constraints list with the dictionary representation of the constraint
-            constraints = [
-                nonlinear_constraint_dict,
-                {},  
-                {},  
-                {}
-            ]
+            constraints = [nonlinear_constraint_obj]
         else:
             constraints = None
 
