@@ -1018,9 +1018,9 @@ class CfModeling:
             # Update the constraints list with the dictionary representation of the constraint
             constraints = [
                 nonlinear_constraint_dict,
-                {},  # Empty dictionary representing no constraints for the second parameter
-                {},  # Empty dictionary representing no constraints for the third parameter
-                {}   # Empty dictionary representing no constraints for the fourth parameter
+                None,  
+                None,  
+                None
             ]
         else:
             constraints = None
