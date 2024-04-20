@@ -1010,10 +1010,18 @@ class CfModeling:
             bounds = None
 
         if self.use_constraints:
-            constraints = [NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0),
-                           None,
-                           None,
-                           None]
+            nonlinear_constraint_obj = NonlinearConstraint(lambda params: vert_idx_constraint(params, vert_centers), 0, 0)
+            
+            # Convert the NonlinearConstraint object into a dictionary representation
+            nonlinear_constraint_dict = {'type': 'eq', 'fun': nonlinear_constraint_obj.fun}
+
+            # Update the constraints list with the dictionary representation of the constraint
+            constraints = [
+                nonlinear_constraint_dict,
+                {},  # Empty dictionary representing no constraints for the second parameter
+                {},  # Empty dictionary representing no constraints for the third parameter
+                {}   # Empty dictionary representing no constraints for the fourth parameter
+            ]
         else:
             constraints = None
 
