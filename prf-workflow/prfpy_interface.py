@@ -998,14 +998,13 @@ class CfModeling:
         Parameter order: 'vert_centers','prf_size','beta','baseline','total_rsq'
         """
         vert_centers = np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'])
-        min_vtx = min(np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated']))
-        max_vtx = max(np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated']))
+        vtx_centers_gridfit = self.cfm_output_config[aperture_type][subsurf_name]['gf'].gridsearch_params[:,0]
 
         if self.use_bounds:
-            bounds = [(min_vtx, max_vtx),  # Bounds for the first parameter
-                        (None, None),         
-                        (None, None),         
-                        (None, None)] 
+            bounds = [(vtx_centers_gridfit, vtx_centers_gridfit),  # Bounds for the first parameter
+                                (None, None),         
+                                (None, None),         
+                                (None, None)] 
         else:
             bounds = None
 
