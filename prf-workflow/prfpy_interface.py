@@ -999,12 +999,13 @@ class CfModeling:
         """
         vert_centers = np.array(self.cfm_output_config[aperture_type][subsurf_name]['subsurface_translated'])
         vtx_centers_gridfit = self.cfm_output_config[aperture_type][subsurf_name]['gf'].gridsearch_params[:,0]
+        n_params = self.cfm_output_config[aperture_type][subsurf_name]['gf'].gridsearch_params.shape[1]-1 # last param is rsq (exclude)
 
         if self.use_bounds:
-            bounds = [(vtx_centers_gridfit, vtx_centers_gridfit),  # Bounds for the first parameter
-                                (None, None),         
-                                (None, None),         
-                                (None, None)] 
+            bounds = [
+                (vtx_centers_gridfit[i], vtx_centers_gridfit[i]) if i == 0 else (None, None)
+                for i in range(n_params)
+            ] 
         else:
             bounds = None
 
