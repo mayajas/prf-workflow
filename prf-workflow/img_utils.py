@@ -13,6 +13,7 @@ from multiprocessing import Pool, Manager, Lock
 from functools import partial
 import surfdist as sd
 from surfdist import analysis
+from joblib import Parallel, delayed
 
 def is_running_on_slurm():
     return "SLURM_JOB_ID" in os.environ
@@ -592,24 +593,15 @@ class CreateSubsurfaces:
                     self.logger.info('Calculating distance matrix...')
                     self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
                     
+                    subsurface_vertices = self.cfm_output_config[aperture_type][subsurf_name]['subsurface']
 
-                    # Initialize a Manager to create shared vtx object
-                    manager = Manager()
-                    shared_vtx = manager.Value('i', 0)  # Shared integer counter
-                    lock = Lock()  # Lock for synchronization
+                    # Run the calculations in parallel
+                    distances = Parallel(n_jobs=self.n_jobs)(
+                        delayed(calculate_distance)(src, subsurface, self.cort) for src in subsurface_vertices
+                    )
 
-                    # Initialize a Manager to create shared vtx object and lock
-                    manager = Manager()
-                    shared_vtx = manager.Value('i', 0)  # Shared integer counter
-                    lock = manager.Lock()  # Lock for synchronization
-
-                    # Use multiprocessing pool to parallelize the loop
-                    with Pool() as pool:
-                        partial_func = partial(calculate_distance_helper, subsurface=subsurface, cort=self.cort, shared_vtx=shared_vtx, lock=lock)
-                        results = pool.starmap(partial_func, [(src,) for src in self.cfm_output_config[aperture_type][subsurf_name]['subsurface']])
-                        for vtx_index, result in results:
-                            self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx_index] = result
-
+                    # Assign the calculated distances to the cfm_output_config
+                    self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.array(distances)
                     
                 if not len(subsurface['subsurface_translated']) or not len(subsurface['data']):
                     # Get preprocessed timeseries within the given ROI and depth
