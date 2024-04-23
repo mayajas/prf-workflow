@@ -54,12 +54,12 @@ def translate_indices(original_mask, new_mask, depth, target_surfs):
 
     return new_indices, non_occ_vtx, flag_str
 
-def calculate_distance(src, surf, cort):
+def calculate_distance(src, subsurface, cort):
     """
     Function to calculate distance for a single source vertex.
     """
-    wb_dist = sd.analysis.dist_calc(surf, cort, src)
-    return wb_dist
+    wb_dist = sd.analysis.dist_calc(subsurface['surf'], cort, src)
+    return wb_dist[subsurface['subsurface']]
 
 class EquivolumetricSurfaces:
     """
@@ -587,15 +587,11 @@ class CreateSubsurfaces:
                     self.logger.info('Calculating distance matrix...')
                     self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
                     
-                    subsurface_vertices = subsurface['subsurface']
-
-                    # Run the calculations in parallel
-                    distances = Parallel(n_jobs=self.n_procs)(
-                        delayed(calculate_distance)(src, subsurface['surf'], self.cort) for src in subsurface_vertices
-                    )
-
-                    # Assign the calculated distances to the cfm_output_config
-                    self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.array(distances[subsurface_vertices])
+                    vtx = 0
+                    for src in self.cfm_output_config[aperture_type][subsurf_name]['subsurface']:
+                        print(str(vtx), end="\r")
+                        self.cfm_output_config[aperture_type][subsurf_name]['dist'][vtx,] = calculate_distance(src, subsurface, self.cort)
+                        vtx += 1
                     
                 if not len(subsurface['subsurface_translated']) or not len(subsurface['data']):
                     # Get preprocessed timeseries within the given ROI and depth
