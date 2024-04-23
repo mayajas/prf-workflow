@@ -591,7 +591,7 @@ class CreateSubsurfaces:
 
                     # Run the calculations in parallel
                     distances = Parallel(n_jobs=self.n_procs)(
-                        delayed(calculate_distance)(src, subsurface['surf'], subsurface['subsurface'], self.cort) for src in subsurface_vertices
+                        delayed(calculate_distance)(src, subsurface['surf'], self.cort) for src in subsurface_vertices
                     )
 
                     # Assign the calculated distances to the cfm_output_config
