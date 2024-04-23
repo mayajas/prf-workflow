@@ -470,7 +470,7 @@ class CfModelingConfig:
     
     def _get_cf_output_fns(self):
 
-        cfm_output_dir = opj(self.prf_output_dir,'cfm')
+        cfm_output_dir = opj(self.prf_output_dir,'cf')
 
         # check if cfm_output_dir exists, if not, create it
         if not os.path.exists(cfm_output_dir):
