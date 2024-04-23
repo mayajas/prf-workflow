@@ -54,19 +54,12 @@ def translate_indices(original_mask, new_mask, depth, target_surfs):
 
     return new_indices, non_occ_vtx, flag_str
 
-def calculate_distance_helper(src, subsurface, cort, shared_vtx, lock):
-    result = calculate_distance(src, subsurface, cort)
-    with lock:
-        shared_vtx.value += 1
-        vtx_index = shared_vtx.value - 1
-    return vtx_index, result
-
-def calculate_distance(src, subsurface, cort):
+def calculate_distance(src, surf, subsurface, cort):
     """
     Function to calculate distance for a single source vertex.
     """
-    wb_dist = sd.analysis.dist_calc(subsurface['surf'], cort, src)
-    return wb_dist[subsurface['subsurface']]
+    wb_dist = sd.analysis.dist_calc(surf, cort, src)
+    return wb_dist[subsurface]
 
 class EquivolumetricSurfaces:
     """
@@ -594,11 +587,11 @@ class CreateSubsurfaces:
                     self.logger.info('Calculating distance matrix...')
                     self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.zeros([n_vtx_sub,n_vtx_sub])
                     
-                    subsurface_vertices = self.cfm_output_config[aperture_type][subsurf_name]['subsurface']
+                    subsurface_vertices = subsurface['subsurface']
 
                     # Run the calculations in parallel
                     distances = Parallel(n_jobs=self.n_procs)(
-                        delayed(calculate_distance)(src, subsurface, self.cort) for src in subsurface_vertices
+                        delayed(calculate_distance)(src, subsurface['surf'], subsurface['subsurface'], self.cort) for src in subsurface_vertices
                     )
 
                     # Assign the calculated distances to the cfm_output_config
