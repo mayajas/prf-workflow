@@ -76,7 +76,7 @@
         "target_surfs": "all",
         "CF_sizes": [0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 30, 40],
         "verbose": true,
-        "rsq_thresh_itfit": 0.0005,
+        "rsq_thresh_itfit": 0.15,
         "rsq_thresh_viz": 0.01
     }
   }

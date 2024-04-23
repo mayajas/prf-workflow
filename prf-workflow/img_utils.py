@@ -536,7 +536,8 @@ class CleanInputData:
     
 class CreateSubsurfaces:
     """This class contains functions that are used to generate the subsurfaces used for connective field modeling."""
-    def __init__(self, mri_config, cfm_config, logger):
+    def __init__(self, project_config, mri_config, cfm_config, logger):
+        self.n_procs            = project_config.n_procs
         self.cf_run_config      = mri_config.cf_run_config
         self.cfm_output_config  = mri_config.cfm_output_config
         self.occ_mask_fn        = mri_config.occ_mask_fn
@@ -596,7 +597,7 @@ class CreateSubsurfaces:
                     subsurface_vertices = self.cfm_output_config[aperture_type][subsurf_name]['subsurface']
 
                     # Run the calculations in parallel
-                    distances = Parallel(n_jobs=self.n_jobs)(
+                    distances = Parallel(n_jobs=self.n_procs)(
                         delayed(calculate_distance)(src, subsurface, self.cort) for src in subsurface_vertices
                     )
 
