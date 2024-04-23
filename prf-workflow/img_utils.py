@@ -54,12 +54,12 @@ def translate_indices(original_mask, new_mask, depth, target_surfs):
 
     return new_indices, non_occ_vtx, flag_str
 
-def calculate_distance(src, surf, subsurface, cort):
+def calculate_distance(src, surf, cort):
     """
     Function to calculate distance for a single source vertex.
     """
     wb_dist = sd.analysis.dist_calc(surf, cort, src)
-    return wb_dist[subsurface]
+    return wb_dist
 
 class EquivolumetricSurfaces:
     """
@@ -595,7 +595,7 @@ class CreateSubsurfaces:
                     )
 
                     # Assign the calculated distances to the cfm_output_config
-                    self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.array(distances)
+                    self.cfm_output_config[aperture_type][subsurf_name]['dist'] = np.array(distances[subsurface_vertices])
                     
                 if not len(subsurface['subsurface_translated']) or not len(subsurface['data']):
                     # Get preprocessed timeseries within the given ROI and depth
