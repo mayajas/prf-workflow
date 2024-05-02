@@ -77,7 +77,6 @@ class PrfpyStimulus:
             self.logger.info('Loaded.')
         else:
             self.logger.error(f'Output data dict does not exist: {self.output_data_dict_fn}')
-            sys.exit(1)
         
         # Define stimulus object for each aperture type
         for aperture_type, config in self.prf_run_config.items():
