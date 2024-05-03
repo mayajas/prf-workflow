@@ -715,7 +715,7 @@ class PrfFitting:
                     } for key in self.prfpy_output_config
                 }
 
-                for aperture_type in self.prf_run_config.items():
+                for aperture_type in self.prf_run_config:
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     
                     for depth in range(0,self.n_surfs):
