@@ -366,8 +366,10 @@ class CleanInputData:
             for aperture_type, config in self.prf_run_config.items():
                 self.logger.info('Cleaning data for {} aperture type...'.format(aperture_type))
                 config['filtered_data'] = {}  # Add a new key 'filtered_data' for each aperture type
+                config['filtered_data_zscore'] = {}  # Add a new key 'filtered_data' for each aperture type
                 config['masked_data'] = {}  # Add a new key 'masked_data' for each aperture type
                 config['preproc_data_per_depth'] = {}  # Add a new key 'preproc_data_per_depth' for each aperture type
+                config['preproc_data_per_depth_zscore'] = {}  # Add a new key 'preproc_data_per_depth_zscore' for each aperture type
                 config['preproc_data_avg'] = {}  # Add a new key 'preproc_data_avg' for each aperture type
                 for run in range(0,config['n_runs']):
                     self.logger.info('Run {} of {}...'.format(run+1,config['n_runs']))
@@ -385,21 +387,30 @@ class CleanInputData:
                                                                         detrend=self.detrend, standardize=self.standardize,
                                                                         filter=self.filter, low_pass=self.low_pass, high_pass=self.high_pass,
                                                                         t_r=self.TR)
+                        config['filtered_data_zscore'][run][depth] = signal.clean(config['masked_data'][run][depth],
+                                                                        confounds=self.confounds,
+                                                                        detrend=self.detrend, standardize='zscore_sample',
+                                                                        filter=self.filter, low_pass=self.low_pass, high_pass=self.high_pass,
+                                                                        t_r=self.TR)
                         
                 # Average over runs
                 self.logger.info('Averaging over runs...')
                 config['preproc_data_per_depth'] = [0] * self.n_surfs
+                config['preproc_data_per_depth_zscore'] = [0] * self.n_surfs
                 for run in config['filtered_data']:
                     for depth in range(0,self.n_surfs):
                         config['preproc_data_per_depth'][depth] += config['filtered_data'][run][depth]
+                        config['preproc_data_per_depth_zscore'][depth] += config['filtered_data_zscore'][run][depth]
 
                 for depth in range(0,self.n_surfs):
                     config['preproc_data_per_depth'][depth] = config['preproc_data_per_depth'][depth].T
                     config['preproc_data_per_depth'][depth] /= config['n_runs']
+                    config['preproc_data_per_depth_zscore'][depth] = config['preproc_data_per_depth_zscore'][depth].T
+                    config['preproc_data_per_depth_zscore'][depth] /= config['n_runs']
 
                 # Average over depths
                 self.logger.info('Averaging over depths...')
-                config['preproc_data_avg'] = sum(config['preproc_data_per_depth']) / self.n_surfs
+                config['preproc_data_avg'] = sum(config['preproc_data_per_depth_zscore']) / self.n_surfs
 
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
@@ -422,10 +433,10 @@ class CleanInputData:
 
             # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg')
             for aperture_type, config in self.prf_run_config.items():
-                for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg']:
+                for key in ['filtered_data','filtered_data_zscore', 'masked_data', 'preproc_data_per_depth','preproc_data_per_depth_zscore', 'preproc_data_avg']:
                     if key not in config:
                         self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
-                        self.logger.error('Cleaned data dictionary must have the following keys: {}'.format(['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg']))
+                        self.logger.error('Cleaned data dictionary must have the following keys: {}'.format(['filtered_data','filtered_data_zscore', 'masked_data', 'preproc_data_per_depth','preproc_data_per_depth_zscore', 'preproc_data_avg']))
                         self.logger.error('Cleaned data dictionary has the following keys: {}'.format(list(config.keys())))
                         self.logger.error('It is suggested to delete the cleaned data dictionary and rerun the analysis.')
                         sys.exit(1)
