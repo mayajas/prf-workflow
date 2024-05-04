@@ -375,6 +375,7 @@ class CleanInputData:
                     self.logger.info('Run {} of {}...'.format(run+1,config['n_runs']))
                     config['masked_data'][run] = {}
                     config['filtered_data'][run] = {}
+                    config['filtered_data_zscore'][run] = {}
                     for depth in range(0,self.n_surfs):
                         # Apply occipital mask to constrain analysis to occipital pole
                         self.logger.info('Applying occipital mask to constrain analysis to occipital pole... Depth: {}'.format(depth))
