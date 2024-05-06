@@ -254,6 +254,7 @@ class SurfaceProject:
         sampler.inputs.sampling_method = "point"
         sampler.inputs.sampling_range = 0.0
         sampler.inputs.sampling_units = "mm"
+        sampler.inputs.interp_method = "trilinear"
         sampler.inputs.surface = projection_surface
         sampler.inputs.out_file = out_file
         sampler.run()
@@ -411,7 +412,7 @@ class CleanInputData:
 
                 # Average over depths
                 self.logger.info('Averaging over depths...')
-                config['preproc_data_avg'] = sum(config['preproc_data_per_depth_zscore']) / self.n_surfs
+                config['preproc_data_avg'] = sum(config['preproc_data_per_depth']) / self.n_surfs
 
             ## Save cleaned data
             self.logger.info('Saving cleaned data...')
