@@ -612,6 +612,7 @@ class PrfFitting:
         """
         Extract pRF parameters from model fitter.
         """
+        # TODO: separately save Iso and DoG parameters: atm only first model is saved
         ## PRF parameter estimates
         pRF_param_fn = self._get_prf_param_fn(which_surf,which_model)
         
