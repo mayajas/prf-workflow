@@ -57,6 +57,14 @@
             }
         }
     },
+    "DataCleanConfig":  {
+        "detrend": true,
+        "standardize": "psc",
+        "high_pass": 0.01,
+        "low_pass": 0.1,
+        "filter": "butterworth",
+        "confounds": null
+    },
     "CfModelingConfig":  {
         "roi_list": ["V1", "V2", "V3"],
         "subsurfaces": {
