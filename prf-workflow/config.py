@@ -257,7 +257,9 @@ class PrfMappingConfig:
         self.reference_aperture = class_section.get('reference_aperture',  None) # if not None, the pRF model fit from this aperture will be used to initialize
                                                                                     # the fitting for other apertures
                                                                                     # TODO: make sure reference aperture is first in prf_run_config so that it is estimated first
-        self.logger.info('Selected reference aperture: '+self.reference_aperture)
+        # if not none, print out the reference aperture
+        if self.reference_aperture is not None:
+            self.logger.info('Selected reference aperture: '+self.reference_aperture)
                                                                                                                                     
 
         return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture
