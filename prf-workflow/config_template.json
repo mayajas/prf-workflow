@@ -32,6 +32,7 @@
         "normalize_RFs": false,
         "rsq_thresh_itfit": 0.0005,
         "rsq_thresh_viz": 0.01,
+        "overwrite_viz": false,
         "reference_aperture": "bar"
     },
     "MriConfig": {

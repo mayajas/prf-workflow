@@ -863,29 +863,29 @@ class PrfFitting:
                 ecc_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='ecc',aperture_type=aperture_type,depth=depth)
 
                 # Save pRF parameters to mgh files for visualization
-                if not os.path.exists(x_map_mgh):
+                if not os.path.exists(x_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_x.astype(np.float32, order = "C"),affine=affine),x_map_mgh)
-                if not os.path.exists(y_map_mgh):
+                if not os.path.exists(y_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_y.astype(np.float32, order = "C"),affine=affine),y_map_mgh)
-                if not os.path.exists(prf_size_map_mgh):
+                if not os.path.exists(prf_size_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_prf_size.astype(np.float32, order = "C"),affine=affine),prf_size_map_mgh)
-                if not os.path.exists(prf_amp_map_mgh):
+                if not os.path.exists(prf_amp_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_prf_amp.astype(np.float32, order = "C"),affine=affine),prf_amp_map_mgh)
-                if not os.path.exists(bold_baseline_map_mgh):
+                if not os.path.exists(bold_baseline_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_bold_baseline.astype(np.float32, order = "C"),affine=affine),bold_baseline_map_mgh)
-                if not os.path.exists(srf_amp_map_mgh):
+                if not os.path.exists(srf_amp_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_srf_amp.astype(np.float32, order = "C"),affine=affine),srf_amp_map_mgh)
-                if not os.path.exists(srf_size_map_mgh):
+                if not os.path.exists(srf_size_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_srf_size.astype(np.float32, order = "C"),affine=affine),srf_size_map_mgh)
-                if not os.path.exists(hrf_1_map_mgh):
+                if not os.path.exists(hrf_1_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_hrf_1.astype(np.float32, order = "C"),affine=affine),hrf_1_map_mgh)
-                if not os.path.exists(hrf_2_map_mgh):
+                if not os.path.exists(hrf_2_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_hrf_2.astype(np.float32, order = "C"),affine=affine),hrf_2_map_mgh)
-                if not os.path.exists(polar_map_mgh):
+                if not os.path.exists(polar_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_polar.astype(np.float32, order = "C"),affine=affine),polar_map_mgh)
-                if not os.path.exists(ecc_map_mgh):
+                if not os.path.exists(ecc_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_ecc.astype(np.float32, order = "C"),affine=affine),ecc_map_mgh)
-                if not os.path.exists(rsq_map_mgh):
+                if not os.path.exists(rsq_map_mgh) or self.prf_config.overwrite_viz:
                     nib.save(nib.freesurfer.mghformat.MGHImage(unmask_rsq.astype(np.float32, order = "C"),affine=affine),rsq_map_mgh)
 
 class CfStimulus:

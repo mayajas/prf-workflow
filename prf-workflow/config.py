@@ -169,6 +169,7 @@ class PrfMappingConfig:
         normalize_RFs (bool): whether to normalize the RF volumes
         rsq_thresh_itfit (float): Rsq threshold for iterative fitting
         rsq_thresh_viz (float): Rsq threshold for visualization
+        overwrite_viz (bool): whether to overwrite the mgh param visualization files
         reference_aperture (str): reference aperture to be used for pRF model fit
 
     """
@@ -180,7 +181,7 @@ class PrfMappingConfig:
         self.logger     = logger
         
         # get config from config file
-        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture = \
+        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture, self.overwrite_viz = \
             self._load_config(config_file)
 
         # calculate screen dimensions
@@ -254,6 +255,8 @@ class PrfMappingConfig:
                                                                                 # Rsq threshold for iterative fitting. Must be between 0 and 1.         
         self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.1)         # float
                                                                                 # Rsq threshold for visualization. Must be between 0 and 1.   
+        self.overwrite_viz      = class_section.get('overwrite_viz', False)     # boolean, optional
+                                                                                # whether to overwrite the mgh param visualization files
         self.reference_aperture = class_section.get('reference_aperture',  None) # if not None, the pRF model fit from this aperture will be used to initialize
                                                                                     # the fitting for other apertures
                                                                                     # TODO: make sure reference aperture is first in prf_run_config so that it is estimated first
@@ -262,7 +265,7 @@ class PrfMappingConfig:
             self.logger.info('Selected reference aperture: '+self.reference_aperture)
                                                                                                                                     
 
-        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture
+        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture, self.overwrite_viz
 
     def _get_screen_dimensions(self):
         # pRF mapping stimulus dimensions
@@ -325,6 +328,16 @@ class CfModelingConfig:
         subsurfaces (dict): dictionary containing info about sub-surfaces
         target_surfs (list or string): list of target surfaces or the string "all"
         CF_sizes (array): np.array of CF sizes
+        rsq_thresh_itfit (float): Rsq threshold for iterative fitting
+        rsq_thresh_viz (float): Rsq threshold for visualization
+        verbose (bool): whether to print out progress messages
+        use_bounds (bool): whether to use bounds for the CF model fit
+        use_constraints (bool): whether to use constraints for the CF model fit
+        overwrite_viz (bool): whether to overwrite the mgh param visualization files
+        cfm_output_dir (str): output directory for CFM
+        input_data_dict_fn (str): input data dictionary filename
+        output_data_dict_fn (str): output data dictionary filename
+        cfm_param_fn (str): CFM parameter filename
     """
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
         self.n_surfs        = project_config.n_surfs
@@ -333,7 +346,7 @@ class CfModelingConfig:
         self.prf_output_dir = prf_config.prf_output_dir
         self.ROI_dir        = dir_config.ROI_dir
 
-        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints = self._load_config(config_file)
+        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz = self._load_config(config_file)
 
         self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn, self.cfm_param_fn = self._get_cf_output_fns()
 
@@ -420,17 +433,19 @@ class CfModelingConfig:
             self.CF_sizes = np.array(self.CF_sizes)   
 
         # Input parameters for model fit
-        self.rsq_thresh_itfit = class_section.get('rsq_thresh_itfit', 0.0005) # float
+        self.rsq_thresh_itfit   = class_section.get('rsq_thresh_itfit', 0.1)    # float
                                                                                 # Rsq threshold for iterative fitting. Must be between 0 and 1.         
-        self.rsq_thresh_viz = class_section.get('rsq_thresh_viz', 0.1)         # float
+        self.rsq_thresh_viz     = class_section.get('rsq_thresh_viz', 0.1)      # float
                                                                                 # Rsq threshold for visualization. Must be between 0 and 1. 
-        self.verbose = class_section.get('verbose', True)               # boolean, optional
-                                                                        # whether to print out progress messages   
-        self.use_bounds = class_section.get('use_bounds', True)             # boolean, optional
-                                                                            # whether to use bounds for the CF model fit
-        self.use_constraints = class_section.get('use_constraints', True)   # boolean, optional
-                                                                            # whether to use constraints for the CF model fit
-        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints
+        self.overwrite_viz      = class_section.get('overwrite_viz', False)     # boolean, optional
+                                                                                # whether to overwrite the mgh param visualization files
+        self.verbose            = class_section.get('verbose', True)            # boolean, optional
+                                                                                # whether to print out progress messages   
+        self.use_bounds         = class_section.get('use_bounds', True)         # boolean, optional
+                                                                                # whether to use bounds for the CF model fit
+        self.use_constraints    = class_section.get('use_constraints', True)    # boolean, optional
+                                                                                # whether to use constraints for the CF model fit
+        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz
     
     def _get_cf_output_fns(self):
 
