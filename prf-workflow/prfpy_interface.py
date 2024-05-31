@@ -13,12 +13,6 @@ import numpy as np
 import nibabel as nib
 from scipy.optimize import NonlinearConstraint
 
-def pckl_suffix(filename):
-        """
-        Add .pckl suffix to filename.
-        """
-        return filename + '.pckl'
-
 def translate_indices_singlesurf(occ_mask, vert_centers_across_depth, depth, target_surfs):
     """
     Translate indices to single surface indices.
@@ -859,7 +853,7 @@ class PrfFitting:
                 hrf_1_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='hrf_1',aperture_type=aperture_type,depth=depth)
                 hrf_2_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='hrf_2',aperture_type=aperture_type,depth=depth)
                 rsq_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='rsq',aperture_type=aperture_type,depth=depth)
-                polar_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='polar',aperture_type=aperture_type,depth=depth)
+                polar_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='pol',aperture_type=aperture_type,depth=depth)
                 ecc_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='ecc',aperture_type=aperture_type,depth=depth)
 
                 # Save pRF parameters to mgh files for visualization
