@@ -193,8 +193,8 @@ class PrfMappingConfig:
         self.model_name, self.avg_runs, self.prf_output_dir = self._get_prf_mapping_config()
         
         # initialize prf output filenames
-        self.input_data_dict_fn, self.output_data_dict_fn, self.pRF_param_avg_fn, self.x_map_mgh, self.y_map_mgh, self.prf_size_map_mgh, self.prf_amp_map_mgh, self.bold_baseline_map_mgh, self.srf_amp_map_mgh, self.srf_size_map_mgh, self.hrf_1_map_mgh, self.hrf_2_map_mgh, self.rsq_map_mgh, self.polar_map_mgh, self.ecc_map_mgh, self.pRF_param_per_depth_fn, self.polar_map_per_depth_mgh, self.ecc_map_per_depth_mgh, self.hrf_1_map_per_depth_mgh, self.hrf_2_map_per_depth_mgh = self._get_prf_output_fns()
-         
+        self.input_data_dict_fn, self.output_data_dict_fn, self.pRF_param_pckl_fn, self.pRF_param_map_mgh = self._get_prf_output_fns()
+
     def _load_config(self, config_file):
         with open(config_file) as f:
             config_data = json.load(f)
@@ -309,50 +309,12 @@ class PrfMappingConfig:
         # data dictionary files
         input_data_dict_fn      = opj(self.prf_output_dir,self.hemi+'_input_data.pckl')
         output_data_dict_fn     = opj(self.prf_output_dir,self.hemi+'_output_data.pckl')
-
-        # avg across depths
-        # prfpy outputs
-        pRF_param_avg_fn        = opj(self.prf_output_dir,self.hemi+'_pRF_params_avg')
-
-        x_map_mgh               = opj(self.prf_output_dir,self.hemi+'.x.mgh')
-        y_map_mgh               = opj(self.prf_output_dir,self.hemi+'.y.mgh')
-        prf_size_map_mgh        = opj(self.prf_output_dir,self.hemi+'.prf_size.mgh')
-        prf_amp_map_mgh         = opj(self.prf_output_dir,self.hemi+'.prf_amp.mgh')
-        bold_baseline_map_mgh   = opj(self.prf_output_dir,self.hemi+'.bold_baseline.mgh')
-        srf_amp_map_mgh         = opj(self.prf_output_dir,self.hemi+'.srf_amp.mgh')
-        srf_size_map_mgh        = opj(self.prf_output_dir,self.hemi+'.srf_size.mgh')
-        hrf_1_map_mgh           = opj(self.prf_output_dir,self.hemi+'.hrf_1.mgh')
-        hrf_2_map_mgh           = opj(self.prf_output_dir,self.hemi+'.hrf_2.mgh')
-        polar_map_mgh           = opj(self.prf_output_dir,self.hemi+'.pol.mgh')
-        ecc_map_mgh             = opj(self.prf_output_dir,self.hemi+'.ecc.mgh')
-        rsq_map_mgh             = opj(self.prf_output_dir,self.hemi+'.rsq.mgh')
+        pRF_param_pckl_fn       = opj(self.prf_output_dir,self.hemi+'_pRF_params_{which_depth}{which_model}.pckl')
         
-        # layer-specific
-        if self.n_surfs > 1:
-            # prfpy outputs
-            pRF_param_per_depth_fn      = opj(self.prf_output_dir,self.hemi+'_pRF_params_per_depth')
+        # prf parameter maps
+        pRF_param_map_mgh           = opj(self.prf_output_dir,self.hemi+'.{param_name}.{aperture_type}.{depth}.mgh')            
 
-            # prf parameter maps
-            polar_map_per_depth_mgh     = [opj(self.prf_output_dir,self.hemi+'.pol.'+str(depth)+'.mgh')
-                                            for depth in range(0,self.n_surfs)]
-            ecc_map_per_depth_mgh       = [opj(self.prf_output_dir,self.hemi+'.ecc.'+str(depth)+'.mgh')
-                                            for depth in range(0,self.n_surfs)]
-            if self.fit_hrf:
-                hrf_1_map_per_depth_mgh = [opj(self.prf_output_dir,self.hemi+'.hrf_1.'+str(depth)+'.mgh')
-                                            for depth in range(0,self.n_surfs)]
-                hrf_2_map_per_depth_mgh = [opj(self.prf_output_dir,self.hemi+'.hrf_2.'+str(depth)+'.mgh')
-                                            for depth in range(0,self.n_surfs)]
-            else:
-                hrf_1_map_per_depth_mgh = None
-                hrf_2_map_per_depth_mgh     = None
-        else:
-            pRF_param_per_depth_fn      = None
-            polar_map_per_depth_mgh     = None
-            ecc_map_per_depth_mgh       = None
-            hrf_1_map_per_depth_mgh     = None
-            hrf_2_map_per_depth_mgh     = None
-
-        return input_data_dict_fn, output_data_dict_fn, pRF_param_avg_fn, x_map_mgh, y_map_mgh, prf_size_map_mgh, prf_amp_map_mgh, bold_baseline_map_mgh, srf_amp_map_mgh, srf_size_map_mgh, hrf_1_map_mgh, hrf_2_map_mgh, rsq_map_mgh, polar_map_mgh, ecc_map_mgh, pRF_param_per_depth_fn, polar_map_per_depth_mgh, ecc_map_per_depth_mgh, hrf_1_map_per_depth_mgh, hrf_2_map_per_depth_mgh
+        return input_data_dict_fn, output_data_dict_fn, pRF_param_pckl_fn, pRF_param_map_mgh
 
 class CfModelingConfig:
     """

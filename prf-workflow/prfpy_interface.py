@@ -142,8 +142,7 @@ class PrfFitting:
         self.n_procs                    = project_config.n_procs
 
         # Prfpy output filenames
-        self.pRF_param_avg_fn           = prf_config.pRF_param_avg_fn
-        self.pRF_param_per_depth_fn     = prf_config.pRF_param_per_depth_fn
+        self.pRF_param_pckl_fn          = prf_config.pRF_param_pckl_fn
 
         # Reference aperture
         self.reference_aperture         = prf_config.reference_aperture
@@ -593,34 +592,23 @@ class PrfFitting:
                     else:
                         self.logger.info('Iterative fit already performed on depth ' + str(depth))         
 
-    def _get_prf_param_fn(self,which_surf,which_model):
-
-        if which_surf == 'single' or which_surf == 'avg':
-            if which_model == 'Iso':
-                pRF_param_fn = pckl_suffix(self.pRF_param_avg_fn)
-            elif which_model == 'DoG':
-                pRF_param_fn = pckl_suffix(self.pRF_param_avg_fn+'_DoG')
-        elif which_surf == 'depths':
-            if which_model == 'Iso':
-                pRF_param_fn = pckl_suffix(self.pRF_param_per_depth_fn)
-            elif which_model == 'DoG':
-                pRF_param_fn = pckl_suffix(self.pRF_param_per_depth_fn+'_DoG')
-
-        return pRF_param_fn
 
     def _get_prf_params(self,which_model,which_surf):
         """
         Extract pRF parameters from model fitter.
-        """
-        # TODO: separately save Iso and DoG parameters: atm only first model is saved
-        ## PRF parameter estimates
-        pRF_param_fn = self._get_prf_param_fn(which_surf,which_model)
+        """        
         
         # Extract pRF parameter estimates from iterative fit result
         if which_surf == 'single' or which_surf == 'avg':
+            if which_model == 'Iso':
+                pRF_param_fn = self.pRF_param_pckl_fn.format(which_surf='avg',which_model='')
+            elif which_model == 'DoG':
+                pRF_param_fn = self.pRF_param_pckl_fn.format(which_surf='avg',which_model='_DoG')
+
             # For single and average surfaces
             if not os.path.exists(pRF_param_fn):
                 self.logger.info('{} does not yet exist'.format(pRF_param_fn))
+                self.logger.info('Saving pRF parameters to pickle file...')
                 # Initialize pRF parameters 
                 prf_params      = {
                     key:{
@@ -694,9 +682,15 @@ class PrfFitting:
                     prf_params = pickle.load(pickle_file)
 
         elif which_surf == 'depths':
+            if which_model == 'Iso':
+                pRF_param_fn = self.pRF_param_pckl_fn.format(which_surf='per_depth',which_model='')
+            elif which_model == 'DoG':
+                pRF_param_fn = self.pRF_param_pckl_fn.format(which_surf='per_depth',which_model='_DoG')
+
             # For individual surfaces
             if not os.path.exists(pRF_param_fn):
                 self.logger.info('{} does not yet exist'.format(pRF_param_fn))
+                self.logger.info('Saving pRF parameters to pickle file...')
 
                 # Initialize pRF parameters
                 prf_params      = {
@@ -779,100 +773,120 @@ class PrfFitting:
             occ_mask, n_vtx = pickle.load(pickle_file)
 
         if which_surf == 'single' or which_surf == 'avg':
+            self.logger.info('Saving pRF parameters to mgh files for visualization...')
+
+            for aperture_type in self.prf_run_config:
+                self.logger.info(f"[[{aperture_type} aperture]]")
             
-            # Unmask avg pRF parameters
-            unmask_x               = np.zeros(n_vtx)
-            unmask_y               = np.zeros(n_vtx)
-            unmask_prf_size        = np.zeros(n_vtx)
-            unmask_prf_amp         = np.zeros(n_vtx)
-            unmask_bold_baseline   = np.zeros(n_vtx)
-            unmask_srf_amp         = np.zeros(n_vtx)
-            unmask_srf_size        = np.zeros(n_vtx)
-            unmask_hrf_1           = np.zeros(n_vtx)
-            unmask_hrf_2           = np.zeros(n_vtx)
-            unmask_rsq             = np.zeros(n_vtx)
-            unmask_polar           = np.zeros(n_vtx)
-            unmask_ecc             = np.zeros(n_vtx)
-            
+                # Unmask avg pRF parameters
+                unmask_x               = np.zeros(n_vtx)
+                unmask_y               = np.zeros(n_vtx)
+                unmask_prf_size        = np.zeros(n_vtx)
+                unmask_prf_amp         = np.zeros(n_vtx)
+                unmask_bold_baseline   = np.zeros(n_vtx)
+                unmask_srf_amp         = np.zeros(n_vtx)
+                unmask_srf_size        = np.zeros(n_vtx)
+                unmask_hrf_1           = np.zeros(n_vtx)
+                unmask_hrf_2           = np.zeros(n_vtx)
+                unmask_rsq             = np.zeros(n_vtx)
+                unmask_polar           = np.zeros(n_vtx)
+                unmask_ecc             = np.zeros(n_vtx)
+                
 
-            unmask_x[occ_mask]              = prf_params['bar']['x']
-            unmask_y[occ_mask]              = prf_params['bar']['y']
-            unmask_prf_size[occ_mask]       = prf_params['bar']['prf_size']
-            unmask_prf_amp[occ_mask]        = prf_params['bar']['prf_amp']
-            unmask_bold_baseline[occ_mask]  = prf_params['bar']['bold_baseline']
-            unmask_srf_amp[occ_mask]        = prf_params['bar']['srf_amp']
-            unmask_srf_size[occ_mask]       = prf_params['bar']['srf_size']
-            unmask_hrf_1[occ_mask]          = prf_params['bar']['hrf_1']
-            unmask_hrf_2[occ_mask]          = prf_params['bar']['hrf_2']
-            unmask_rsq[occ_mask]            = prf_params['bar']['total_rsq']
-            unmask_polar[occ_mask]          = prf_params['bar']['polar']
-            unmask_ecc[occ_mask]            = prf_params['bar']['ecc']
+                unmask_x[occ_mask]              = prf_params[aperture_type]['x']
+                unmask_y[occ_mask]              = prf_params[aperture_type]['y']
+                unmask_prf_size[occ_mask]       = prf_params[aperture_type]['prf_size']
+                unmask_prf_amp[occ_mask]        = prf_params[aperture_type]['prf_amp']
+                unmask_bold_baseline[occ_mask]  = prf_params[aperture_type]['bold_baseline']
+                unmask_srf_amp[occ_mask]        = prf_params[aperture_type]['srf_amp']
+                unmask_srf_size[occ_mask]       = prf_params[aperture_type]['srf_size']
+                unmask_hrf_1[occ_mask]          = prf_params[aperture_type]['hrf_1']
+                unmask_hrf_2[occ_mask]          = prf_params[aperture_type]['hrf_2']
+                unmask_rsq[occ_mask]            = prf_params[aperture_type]['total_rsq']
+                unmask_polar[occ_mask]          = prf_params[aperture_type]['polar']
+                unmask_ecc[occ_mask]            = prf_params[aperture_type]['ecc']
 
-            # Constrain prf maps to realistic eccentricities & pRF sizes
-            max_ecc_deg = self.max_ecc_deg
-            pRF_thresh  = self.max_ecc_deg   
-            rsq_thresh  = self.rsq_thresh_viz
+                # Constrain prf maps to realistic eccentricities & pRF sizes
+                max_ecc_deg = self.max_ecc_deg
+                pRF_thresh  = self.max_ecc_deg   
+                rsq_thresh  = self.rsq_thresh_viz
 
-            # remove vertices where eccentricity is larger than max stimulus ecc
-            # remove vertices where pRF size is negative
-            # remove vertices where pRF size is greater than max_ecc_deg
-            # remove vertices where rsq is less than rsq_thresh
-            condition = (unmask_ecc>max_ecc_deg) | (unmask_prf_size<0) | (unmask_prf_size>pRF_thresh) | (unmask_rsq < rsq_thresh)
-            unmask_x[condition]                = np.nan
-            unmask_y[condition]                = np.nan
-            unmask_prf_size[condition]         = np.nan
-            unmask_prf_amp[condition]          = np.nan
-            unmask_bold_baseline[condition]    = np.nan
-            unmask_srf_amp[condition]          = np.nan
-            unmask_srf_size[condition]         = np.nan
-            unmask_hrf_1[condition]            = np.nan
-            unmask_hrf_2[condition]            = np.nan
-            unmask_rsq[condition]              = np.nan
-            unmask_polar[condition]            = np.nan
-            unmask_ecc[condition]              = np.nan
-            
-            # set nans to 0
-            unmask_x[np.isnan(unmask_x)]                            = 0.
-            unmask_y[np.isnan(unmask_y)]                            = 0.
-            unmask_prf_size[np.isnan(unmask_prf_size)]              = 0.
-            unmask_prf_amp[np.isnan(unmask_prf_amp)]                = 0.
-            unmask_bold_baseline[np.isnan(unmask_bold_baseline)]    = 0.
-            unmask_srf_amp[np.isnan(unmask_srf_amp)]                = 0.
-            unmask_srf_size[np.isnan(unmask_srf_size)]              = 0.
-            unmask_hrf_1[np.isnan(unmask_hrf_1)]                    = 0.
-            unmask_hrf_2[np.isnan(unmask_hrf_2)]                    = 0.
-            unmask_rsq[np.isnan(unmask_rsq)]                        = 0.
-            unmask_polar[np.isnan(unmask_polar)]                    = 0.
-            unmask_ecc[np.isnan(unmask_ecc)]                        = 0.
+                # remove vertices where eccentricity is larger than max stimulus ecc
+                # remove vertices where pRF size is negative
+                # remove vertices where pRF size is greater than max_ecc_deg
+                # remove vertices where rsq is less than rsq_thresh
+                condition = (unmask_ecc>max_ecc_deg) | (unmask_prf_size<0) | (unmask_prf_size>pRF_thresh) | (unmask_rsq < rsq_thresh)
+                unmask_x[condition]                = np.nan
+                unmask_y[condition]                = np.nan
+                unmask_prf_size[condition]         = np.nan
+                unmask_prf_amp[condition]          = np.nan
+                unmask_bold_baseline[condition]    = np.nan
+                unmask_srf_amp[condition]          = np.nan
+                unmask_srf_size[condition]         = np.nan
+                unmask_hrf_1[condition]            = np.nan
+                unmask_hrf_2[condition]            = np.nan
+                unmask_rsq[condition]              = np.nan
+                unmask_polar[condition]            = np.nan
+                unmask_ecc[condition]              = np.nan
+                
+                # set nans to 0
+                unmask_x[np.isnan(unmask_x)]                            = 0.
+                unmask_y[np.isnan(unmask_y)]                            = 0.
+                unmask_prf_size[np.isnan(unmask_prf_size)]              = 0.
+                unmask_prf_amp[np.isnan(unmask_prf_amp)]                = 0.
+                unmask_bold_baseline[np.isnan(unmask_bold_baseline)]    = 0.
+                unmask_srf_amp[np.isnan(unmask_srf_amp)]                = 0.
+                unmask_srf_size[np.isnan(unmask_srf_size)]              = 0.
+                unmask_hrf_1[np.isnan(unmask_hrf_1)]                    = 0.
+                unmask_hrf_2[np.isnan(unmask_hrf_2)]                    = 0.
+                unmask_rsq[np.isnan(unmask_rsq)]                        = 0.
+                unmask_polar[np.isnan(unmask_polar)]                    = 0.
+                unmask_ecc[np.isnan(unmask_ecc)]                        = 0.
 
-            # Save maps to .mgh files for manual delineations
-            meanFunc_mgh_nib = nib.freesurfer.mghformat.load(self.meanFunc_mgh_fn)
-            affine = meanFunc_mgh_nib.affine
+                # Save maps to .mgh files for manual delineations
+                meanFunc_mgh_nib = nib.freesurfer.mghformat.load(self.meanFunc_mgh_fn)
+                affine = meanFunc_mgh_nib.affine
 
-            if not os.path.exists(self.prf_config.x_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_x.astype(np.float32, order = "C"),affine=affine),self.prf_config.x_map_mgh)
-            if not os.path.exists(self.prf_config.y_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_y.astype(np.float32, order = "C"),affine=affine),self.prf_config.y_map_mgh)
-            if not os.path.exists(self.prf_config.prf_size_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_prf_size.astype(np.float32, order = "C"),affine=affine),self.prf_config.prf_size_map_mgh)
-            if not os.path.exists(self.prf_config.prf_amp_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_prf_amp.astype(np.float32, order = "C"),affine=affine),self.prf_config.prf_amp_map_mgh)
-            if not os.path.exists(self.prf_config.bold_baseline_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_bold_baseline.astype(np.float32, order = "C"),affine=affine),self.prf_config.bold_baseline_map_mgh)
-            if not os.path.exists(self.prf_config.srf_amp_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_srf_amp.astype(np.float32, order = "C"),affine=affine),self.prf_config.srf_amp_map_mgh)
-            if not os.path.exists(self.prf_config.srf_size_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_srf_size.astype(np.float32, order = "C"),affine=affine),self.prf_config.srf_size_map_mgh)
-            if not os.path.exists(self.prf_config.hrf_1_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_hrf_1.astype(np.float32, order = "C"),affine=affine),self.prf_config.hrf_1_map_mgh)
-            if not os.path.exists(self.prf_config.hrf_2_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_hrf_2.astype(np.float32, order = "C"),affine=affine),self.prf_config.hrf_2_map_mgh)
-            if not os.path.exists(self.prf_config.polar_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_polar.astype(np.float32, order = "C"),affine=affine),self.prf_config.polar_map_mgh)
-            if not os.path.exists(self.prf_config.ecc_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_ecc.astype(np.float32, order = "C"),affine=affine),self.prf_config.ecc_map_mgh)
-            if not os.path.exists(self.prf_config.rsq_map_mgh):
-                nib.save(nib.freesurfer.mghformat.MGHImage(unmask_rsq.astype(np.float32, order = "C"),affine=affine),self.prf_config.rsq_map_mgh)
+                # Prepare filenames
+                depth = '0'
+                x_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='x',aperture_type=aperture_type,depth=depth)
+                y_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='y',aperture_type=aperture_type,depth=depth)
+                prf_size_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='prf_size',aperture_type=aperture_type,depth=depth)
+                prf_amp_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='prf_amp',aperture_type=aperture_type,depth=depth)
+                bold_baseline_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='bold_baseline',aperture_type=aperture_type,depth=depth)
+                srf_amp_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='srf_amp',aperture_type=aperture_type,depth=depth)
+                srf_size_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='srf_size',aperture_type=aperture_type,depth=depth)
+                hrf_1_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='hrf_1',aperture_type=aperture_type,depth=depth)
+                hrf_2_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='hrf_2',aperture_type=aperture_type,depth=depth)
+                rsq_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='rsq',aperture_type=aperture_type,depth=depth)
+                polar_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='polar',aperture_type=aperture_type,depth=depth)
+                ecc_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='ecc',aperture_type=aperture_type,depth=depth)
+
+                # Save pRF parameters to mgh files for visualization
+                if not os.path.exists(x_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_x.astype(np.float32, order = "C"),affine=affine),x_map_mgh)
+                if not os.path.exists(y_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_y.astype(np.float32, order = "C"),affine=affine),y_map_mgh)
+                if not os.path.exists(prf_size_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_prf_size.astype(np.float32, order = "C"),affine=affine),prf_size_map_mgh)
+                if not os.path.exists(prf_amp_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_prf_amp.astype(np.float32, order = "C"),affine=affine),prf_amp_map_mgh)
+                if not os.path.exists(bold_baseline_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_bold_baseline.astype(np.float32, order = "C"),affine=affine),bold_baseline_map_mgh)
+                if not os.path.exists(srf_amp_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_srf_amp.astype(np.float32, order = "C"),affine=affine),srf_amp_map_mgh)
+                if not os.path.exists(srf_size_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_srf_size.astype(np.float32, order = "C"),affine=affine),srf_size_map_mgh)
+                if not os.path.exists(hrf_1_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_hrf_1.astype(np.float32, order = "C"),affine=affine),hrf_1_map_mgh)
+                if not os.path.exists(hrf_2_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_hrf_2.astype(np.float32, order = "C"),affine=affine),hrf_2_map_mgh)
+                if not os.path.exists(polar_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_polar.astype(np.float32, order = "C"),affine=affine),polar_map_mgh)
+                if not os.path.exists(ecc_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_ecc.astype(np.float32, order = "C"),affine=affine),ecc_map_mgh)
+                if not os.path.exists(rsq_map_mgh):
+                    nib.save(nib.freesurfer.mghformat.MGHImage(unmask_rsq.astype(np.float32, order = "C"),affine=affine),rsq_map_mgh)
 
 class CfStimulus:
     """
