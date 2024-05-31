@@ -72,8 +72,10 @@ class PrfpyStimulus:
         else:
             self.logger.error(f'Output data dict does not exist yet: {self.output_data_dict_fn}')
         
-        # Define stimulus object for each aperture type
+        # Define stimulus object for each aperture type (if 'combined' exists among keys, then only define 'combined' aperture)
         for aperture_type, config in self.prf_run_config.items():
+            if 'combined' in self.prf_run_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info(f"[[{aperture_type} aperture]]")
 
             if not self.prfpy_output_config[aperture_type]['stim']:
@@ -236,6 +238,8 @@ class PrfFitting:
 
         # Define 2D iso Gaussian model and model fitter
         for aperture_type, config in self.prf_run_config.items():
+            if 'combined' in self.prf_run_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info(f"[[{aperture_type} aperture]]")
            
             if which_surf == 'single' or which_surf == 'avg':
@@ -429,6 +433,8 @@ class PrfFitting:
 
         # Define DoG model and model fitter
         for aperture_type, config in self.prf_run_config.items():
+            if 'combined' in self.prf_run_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info(f"[[{aperture_type} aperture]]")
             
             if which_surf == 'single' or which_surf == 'avg':

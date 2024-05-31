@@ -33,7 +33,9 @@
         "rsq_thresh_itfit": 0.0005,
         "rsq_thresh_viz": 0.01,
         "overwrite_viz": false,
-        "reference_aperture": "bar"
+        "reference_aperture": "bar",
+        "ap_combine": "concatenate",
+        "concat_padding": 10
     },
     "MriConfig": {
         "TR": 2.0,
@@ -47,6 +49,15 @@
                                 "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-02_sess_nr_1_sess_nslices_68/reg_bar2.nii",
                                 "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-03_sess_nr_2_sess_nslices_68/reg_bar3.nii",
                                 "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-bar_run-04_sess_nr_3_sess_nslices_68/reg_bar4.nii"
+                            ]
+            },
+            "wedge": {
+                "n_runs": 4,
+                "ap_fn": "stimulus_wedge.mat",
+                "nii_fn_list": ["/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-wedge_run-01_sess_nr_0_sess_nslices_68/reg_wedge1.nii",
+                                "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-wedge_run-02_sess_nr_1_sess_nslices_68/reg_wedge2.nii",
+                                "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-wedge_run-03_sess_nr_2_sess_nslices_68/reg_wedge3.nii",
+                                "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/_sess_id_task-wedge_run-04_sess_nr_3_sess_nslices_68/reg_wedge4.nii"
                             ]
             }
         }

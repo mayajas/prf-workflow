@@ -265,6 +265,8 @@ class CleanInputData:
     """
     def __init__(self, project_config, prf_config, mri_config, data_clean_config, logger, cfm_config=None):
         self.n_surfs            = project_config.n_surfs
+        self.ap_combine         = prf_config.ap_combine
+        self.concat_padding     = prf_config.concat_padding
         self.occ_mask_fn        = mri_config.occ_mask_fn
         self.prf_run_config     = mri_config.prf_run_config
         self.prf_config         = prf_config
@@ -322,6 +324,10 @@ class CleanInputData:
         ## Clean input data - for each CF run (if applicable):
         if cfm_config is not None:
             mri_config.cf_run_config = self._clean_data_cfm()
+
+        ## Combine apertures (if applicable)
+        if self.ap_combine != 'separate' or self.ap_combine is not None:
+            self.prf_run_config = self._combine_apertures()
 
     def _make_occipital_mask(self):
         """
@@ -391,7 +397,7 @@ class CleanInputData:
                                                                         t_r=self.TR)
                         config['filtered_data_zscore'][run][depth] = signal.clean(config['masked_data'][run][depth],
                                                                         confounds=self.confounds,
-                                                                        detrend=self.detrend, standardize='zscore_sample',
+                                                                        detrend=self.detrend, standardize='zscore',
                                                                         filter=self.filter, low_pass=self.low_pass, high_pass=self.high_pass,
                                                                         t_r=self.TR)
                         
@@ -540,6 +546,81 @@ class CleanInputData:
 
         return self.cf_run_config
     
+    def _combine_apertures(self):
+        """
+        This function combines data from the various stimulus apertures by concatenating the preprocessed data across apertures.
+        """
+        self.logger.info('Combining data from different stimulus apertures...')
+        if not os.path.exists(self.prf_config.input_data_dict_fn):
+            self.logger.error('The cleaned data dictionary does not exist. Please run the data cleaning step before combining apertures.')
+            sys.exit(1)
+        else:
+            self.logger.info('Cleaned data already exists at {}'.format(self.prf_config.input_data_dict_fn))
+            self.logger.info('Loading cleaned data...')
+            with open(self.prf_config.input_data_dict_fn, 'rb') as pickle_file:
+                self.prf_run_config = pickle.load(pickle_file)
+
+            self.logger.info('Combining data from different stimulus apertures...')
+            self.prf_run_config_combined = {
+                'combined': {
+                    'design_matrix': [],
+                    'preproc_data_avg': [],
+                    'preproc_data_per_depth': [0] * self.n_surfs
+                }
+            }
+
+            ap = 0
+            for aperture_type, config in self.prf_run_config.items():
+                if ap == 0:
+                    self.prf_run_config_combined['combined']['design_matrix'] = config['design_matrix']
+                    self.prf_run_config_combined['combined']['preproc_data_avg'] = config['preproc_data_avg']
+                    for depth in range(0,self.n_surfs):
+                        self.prf_run_config_combined['combined']['preproc_data_per_depth'][depth] = config['preproc_data_per_depth'][depth]
+                else:
+                    if self.concat_padding > 0:
+                        ## add "padding" before concatenating the data from additional apertures
+                        self.logger.info('Adding padding before concatenating the data from additional apertures...')
+                        padding_design_matrix = np.zeros([self.prf_run_config_combined['combined']['design_matrix'][0].shape[0],
+                                                          self.prf_run_config_combined['combined']['design_matrix'][0].shape[1],
+                                                          self.concat_padding])
+                        padding_data = np.zeros([self.prf_run_config_combined['combined']['preproc_data_avg'][0].shape[0],
+                                                 self.concat_padding])
+                        
+                        self.prf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.prf_run_config_combined['combined']['design_matrix'], 
+                                                                                               padding_design_matrix,
+                                                                                               config['design_matrix']), axis=2)
+                        self.prf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.prf_run_config_combined['combined']['preproc_data_avg'],
+                                                                                                  padding_data,
+                                                                                                  config['preproc_data_avg']), axis=1)
+                        for depth in range(0,self.n_surfs):
+                            self.prf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.prf_run_config_combined['combined']['preproc_data_per_depth'][depth],
+                                                                                                                padding_data,
+                                                                                                                config['preproc_data_per_depth'][depth]), axis=1)
+                    else:
+                        self.logger.info('Padding is set to 0. It is highly recommended to set the padding to a value greater than 0.')
+                        self.prf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.prf_run_config_combined['combined']['design_matrix'], 
+                                                                                               config['design_matrix']), axis=2)
+                        self.prf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.prf_run_config_combined['combined']['preproc_data_avg'],
+                                                                                                  config['preproc_data_avg']), axis=1)
+                        for depth in range(0,self.n_surfs):
+                            self.prf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.prf_run_config_combined['combined']['preproc_data_per_depth'][depth],
+                                                                                                                config['preproc_data_per_depth'][depth]), axis=1)
+                ap += 1
+
+            # write prf_run_config_combined to prf_run_config
+            self.prf_run_config['combined'] = self.prf_run_config_combined['combined']
+
+            ## Save combined data
+            self.logger.info('Saving combined data...')
+            with open(self.prf_config.input_data_dict_fn, 'wb') as pickle_file:
+                pickle.dump(self.prf_run_config, pickle_file)
+
+            return self.prf_run_config
+
+
+
+
+
 class CreateSubsurfaces:
     """This class contains functions that are used to generate the subsurfaces used for connective field modeling."""
     def __init__(self, project_config, mri_config, cfm_config, logger):

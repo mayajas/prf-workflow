@@ -171,6 +171,8 @@ class PrfMappingConfig:
         rsq_thresh_viz (float): Rsq threshold for visualization
         overwrite_viz (bool): whether to overwrite the mgh param visualization files
         reference_aperture (str): reference aperture to be used for pRF model fit
+        ap_combine (str): method of combining different stimulus apertures
+        concat_padding (int): how many artificial baseline volumes to add between different apertures when concatenating
 
     """
     def __init__(self, config_file, dir_config, project_config, logger):
@@ -181,7 +183,7 @@ class PrfMappingConfig:
         self.logger     = logger
         
         # get config from config file
-        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture, self.overwrite_viz = \
+        self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture, self.overwrite_viz, self.ap_combine, self.concat_padding = \
             self._load_config(config_file)
 
         # calculate screen dimensions
@@ -259,13 +261,26 @@ class PrfMappingConfig:
                                                                                 # whether to overwrite the mgh param visualization files
         self.reference_aperture = class_section.get('reference_aperture',  None) # if not None, the pRF model fit from this aperture will be used to initialize
                                                                                     # the fitting for other apertures
-                                                                                    # TODO: make sure reference aperture is first in prf_run_config so that it is estimated first
+        # how to deal with multiple stimulus apertures
+        self.ap_combine = class_section.get('ap_combine', 'separate') # 'concatenate' or 'separate'
+                                                                                # if concatenate: aperture files and fMRI data are concatenated
+                                                                                # if separate: different apertures are analyzed separately
+        if self.ap_combine not in ['concatenate', 'separate']:
+            self.logger.error('ap_combine (method of combining different stimulus apertures) must be either "concatenate" or "separate". Please check the configuration file.')
+            sys.exit(1)
+
+        if self.ap_combine == 'concatenate':
+            self.concat_padding = class_section.get('concat_padding', 10) # int
+                                                                          # how many artificial baseline volumes to add between different apertures when concatenating
+        else:
+            self.concat_padding = None
+
         # if not none, print out the reference aperture
         if self.reference_aperture is not None:
             self.logger.info('Selected reference aperture: '+self.reference_aperture)
                                                                                                                                     
 
-        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture, self.overwrite_viz
+        return self.screen_height_cm, self.screen_distance_cm, self.which_model, self.avg_runs, self.fit_hrf, self.start_from_avg, self.grid_nr, self.y_coord_cutoff, self.verbose, self.hrf, self.filter_predictions, self.filter_type, self.filter_params, self.normalize_RFs, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.reference_aperture, self.overwrite_viz, self.ap_combine, self.concat_padding
 
     def _get_screen_dimensions(self):
         # pRF mapping stimulus dimensions
@@ -485,6 +500,8 @@ class MriConfig:
     def __init__(self, config_file, project_config, dir_config, prf_config, logger, cfm_config=None):
         self.prf_output_dir     = prf_config.prf_output_dir
         self.reference_aperture = prf_config.reference_aperture
+        self.ap_combine         = prf_config.ap_combine
+        self.concat_padding     = prf_config.concat_padding
         self.FS_dir             = dir_config.FS_dir
         self.subject_id         = project_config.subject_id
         self.hemi               = project_config.hemi
@@ -504,7 +521,7 @@ class MriConfig:
         self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.cort_label_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
 
         # get info about pRF runs (apertures, nr sessions per run, filenames of projected runs)
-        self.prf_run_config, self.prfpy_output_config = self._get_prf_run_list()
+        self.prf_run_config, self.prfpy_output_config, self.ap_combine = self._get_prf_run_list()
 
         # get info about CFM runs (nr sessions per run, filenames of projected runs)
         if self.do_cf_modeling and cfm_config is not None:
@@ -601,6 +618,12 @@ class MriConfig:
 
             config['mgh_fn_list'] = mgh_fn_list
 
+        aperture_types = self.prf_run_config.keys()
+        if self.ap_combine == 'separate' or self.ap_combine is None or len(aperture_types) == 1:
+            self.ap_combine = 'separate'
+        elif self.ap_combine == 'concatenate':
+            aperture_types = ['combined']
+
         prfpy_output_config = {
             key: {
                 'stim': [],
@@ -632,10 +655,10 @@ class MriConfig:
                 'gg_dog_avg': [],
                 'gf_dog_avg': [],
                 'gf_dog_per_depth': [0] * self.n_surfs
-            } for key in self.prf_run_config
-        }
+            } for key in aperture_types
+        }            
 
-        return self.prf_run_config, prfpy_output_config
+        return self.prf_run_config, prfpy_output_config, self.ap_combine
     
     def _get_cf_run_config(self):
         for aperture_type, config in self.cf_run_config.items():
