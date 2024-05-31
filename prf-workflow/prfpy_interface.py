@@ -842,7 +842,7 @@ class PrfFitting:
                 affine = meanFunc_mgh_nib.affine
 
                 # Prepare filenames
-                depth = '0'
+                depth = 'avg'
                 x_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='x',aperture_type=aperture_type,depth=depth)
                 y_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='y',aperture_type=aperture_type,depth=depth)
                 prf_size_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='prf_size',aperture_type=aperture_type,depth=depth)
