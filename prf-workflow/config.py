@@ -309,7 +309,7 @@ class PrfMappingConfig:
         # data dictionary files
         input_data_dict_fn      = opj(self.prf_output_dir,self.hemi+'_input_data.pckl')
         output_data_dict_fn     = opj(self.prf_output_dir,self.hemi+'_output_data.pckl')
-        pRF_param_pckl_fn       = opj(self.prf_output_dir,self.hemi+'_pRF_params_{which_depth}{which_model}.pckl')
+        pRF_param_pckl_fn       = opj(self.prf_output_dir,self.hemi+'_pRF_params_{which_surf}{which_model}.pckl')
         
         # prf parameter maps
         pRF_param_map_mgh           = opj(self.prf_output_dir,self.hemi+'.{param_name}.{aperture_type}.{depth}.mgh')            
