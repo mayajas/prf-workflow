@@ -432,6 +432,8 @@ class CleanInputData:
 
             # Check if the cleaned data matches the dimensions of the occipital mask
             for aperture_type, config in self.prf_run_config.items():
+                if aperture_type == 'combined': 
+                    continue
                 for run in range(0,config['n_runs']):
                     for depth in range(0,self.n_surfs):
                         if config['masked_data'][run][depth].shape[1] != self.occ_mask.shape[0]:
@@ -441,6 +443,8 @@ class CleanInputData:
 
             # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg')
             for aperture_type, config in self.prf_run_config.items():
+                if aperture_type == 'combined': 
+                    continue
                 for key in ['filtered_data','filtered_data_zscore', 'masked_data', 'preproc_data_per_depth','preproc_data_per_depth_zscore', 'preproc_data_avg']:
                     if key not in config:
                         self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
@@ -571,6 +575,8 @@ class CleanInputData:
 
             ap = 0
             for aperture_type, config in self.prf_run_config.items():
+                if aperture_type == 'combined': 
+                    continue
                 if ap == 0:
                     self.prf_run_config_combined['combined']['design_matrix'] = config['design_matrix']
                     self.prf_run_config_combined['combined']['preproc_data_avg'] = config['preproc_data_avg']
