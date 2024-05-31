@@ -580,10 +580,10 @@ class CleanInputData:
                     if self.concat_padding > 0:
                         ## add "padding" before concatenating the data from additional apertures
                         self.logger.info('Adding padding before concatenating the data from additional apertures...')
-                        padding_design_matrix = np.zeros([self.prf_run_config_combined['combined']['design_matrix'][0].shape[0],
-                                                          self.prf_run_config_combined['combined']['design_matrix'][0].shape[1],
+                        padding_design_matrix = np.zeros([self.prf_run_config_combined['combined']['design_matrix'].shape[0],
+                                                          self.prf_run_config_combined['combined']['design_matrix'].shape[1],
                                                           self.concat_padding])
-                        padding_data = np.zeros([self.prf_run_config_combined['combined']['preproc_data_avg'][0].shape[0],
+                        padding_data = np.zeros([self.prf_run_config_combined['combined']['preproc_data_avg'].shape[0],
                                                  self.concat_padding])
                         
                         self.prf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.prf_run_config_combined['combined']['design_matrix'], 
