@@ -70,7 +70,7 @@ class PrfpyStimulus:
                 self.prfpy_output_config = pickle.load(pickle_file)
             self.logger.info('Loaded.')
         else:
-            self.logger.error(f'Output data dict does not exist yet: {self.output_data_dict_fn}')
+            self.logger.info(f'Output data dict does not exist yet: {self.output_data_dict_fn}')
         
         # Define stimulus object for each aperture type (if 'combined' exists among keys, then only define 'combined' aperture)
         for aperture_type, config in self.prf_run_config.items():

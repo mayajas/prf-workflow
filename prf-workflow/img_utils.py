@@ -327,7 +327,7 @@ class CleanInputData:
 
         ## Combine apertures (if applicable)
         if self.ap_combine != 'separate' or self.ap_combine is not None:
-            self.prf_run_config = self._combine_apertures()
+            mri_config.prf_run_config = self._combine_apertures()
 
     def _make_occipital_mask(self):
         """
