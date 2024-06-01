@@ -628,6 +628,8 @@ class PrfFitting:
                 }
                 
                 for aperture_type in self.prf_run_config:
+                    if 'combined' in self.prf_run_config.keys() and aperture_type != 'combined':
+                        continue
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     if which_model == 'Iso':
                         prf_params[aperture_type]['x']=self.prfpy_output_config[aperture_type]['gf_avg'].iterative_search_params[:,0]
@@ -711,6 +713,8 @@ class PrfFitting:
                 }
 
                 for aperture_type in self.prf_run_config:
+                    if 'combined' in self.prf_run_config.keys() and aperture_type != 'combined':
+                        continue
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     
                     for depth in range(0,self.n_surfs):
@@ -776,6 +780,8 @@ class PrfFitting:
             self.logger.info('Saving pRF parameters to mgh files for visualization...')
 
             for aperture_type in self.prf_run_config:
+                if 'combined' in self.prf_run_config.keys() and aperture_type != 'combined':
+                    continue
                 self.logger.info(f"[[{aperture_type} aperture]]")
             
                 # Unmask avg pRF parameters
