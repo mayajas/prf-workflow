@@ -486,6 +486,7 @@ class MriConfig:
     Attributes:
         TR (float): repetition time
         equivol_fn (str): equivolumetric surface filename prefix
+        interp_method (str): interpolation method for surface projection (either "nearest" or "trilinear")
         meanFunc_nii_fn (str): mean functional nitfti filepath and name
         prf_run_config (dict): dictionary containing info about pRF runs
         cf_run_config (dict): dictionary containing info about CFM runs
@@ -512,9 +513,9 @@ class MriConfig:
         # get config from config file
         if self.do_cf_modeling and cfm_config is not None:
             self.cfm_config = cfm_config
-            self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config = self._load_config(config_file)
+            self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config = self._load_config(config_file)
         else:
-            self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
+            self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
             self.cf_run_config = None
 
         # get input mri filenames
@@ -540,11 +541,22 @@ class MriConfig:
         replacements = {"subject_id": self.subject_id}
         class_section = replace_placeholders(class_section, replacements)
 
-        self.TR = class_section.get('TR', 2.0)
+        self.TR = class_section.get('TR', None) # repetition time
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
+        self.interp_method = class_section.get('interp_method', 'nearest') # interpolation method for surface projection (either "nearest" or "trilinear")
         self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
         self.prf_run_config  = class_section.get('prf_run_config',  None) # dictionary containing info about pRF runs
 
+        # check that TR is a float
+        if not isinstance(self.TR, float):
+            self.logger.error('TR must be a float. Please check the configuration file.')
+            sys.exit(1)
+
+        # check that interp_method is either nearest or trilinear
+        if self.interp_method not in ['nearest', 'trilinear']:
+            self.logger.error('Interpolation method must be either "nearest" or "trilinear". Please check the configuration file.')
+            sys.exit(1)
+            
         # Check that mean functional and pRF nifti files exist
         if not os.path.exists(self.meanFunc_nii_fn):
             self.logger.error('Mean functional image does not exist under this address: '+ self.meanFunc_nii_fn)
@@ -579,9 +591,9 @@ class MriConfig:
                         self.logger.info('CFM '+aperture_type+' run '+str(run)+': '+config['nii_fn_list'][run]) 
 
         if self.do_cf_modeling:
-            return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config
+            return self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config
         else:
-            return self.TR, self.equivol_fn, self.meanFunc_nii_fn, self.prf_run_config
+            return self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config
     
     def _get_mri_fns(self):
         # Freesurfer mesh filenames

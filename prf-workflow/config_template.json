@@ -40,6 +40,7 @@
     "MriConfig": {
         "TR": 2.0,
         "equivol_fn": "equi",
+        "interp_method": "nearest",
         "meanFunc_nii_fn": "/preprocessing_output_directory/coreg/_subject_id_{subject_id}/reg_meanFunc.nii",
         "prf_run_config": {
             "bar": {

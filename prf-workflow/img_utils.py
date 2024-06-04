@@ -180,7 +180,7 @@ class SurfaceProject:
             if not os.path.exists(out_file):
                 try:
                     logger.info('FS_dir: {}'.format(self.dir_config.FS_dir))
-                    self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,projection_surface,out_file)
+                    self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,self.mri_config.interp_method,projection_surface,out_file)
                     logger.info('Surface-projecting mean functional completed.')
                 except Exception as e:
                     logger.error(f"Error: {str(e)}")
@@ -206,7 +206,7 @@ class SurfaceProject:
                         logger.info('Surface: {}'.format(projection_surface))
                         logger.info('Output file: {}'.format(out_file))
                         try:
-                            self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,projection_surface,out_file)
+                            self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,self.mri_config.interp_method,projection_surface,out_file)
                             logger.info('Surface-projecting pRF mapping run {} of {} for {} aperture type and {} depth completed.'.format(run+1,config['n_runs'],aperture_type,depth+1))
                         except Exception as e:
                             logger.error(f"Error: {str(e)}")
@@ -233,7 +233,7 @@ class SurfaceProject:
                             logger.info('Surface: {}'.format(projection_surface))
                             logger.info('Output file: {}'.format(out_file))
                             try:
-                                self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,projection_surface,out_file)
+                                self._surface_project(self.dir_config.FS_dir,self.subject_id,self.hemi,source_file,self.mri_config.interp_method,projection_surface,out_file)
                                 logger.info('Surface-projecting CF mapping run {} of {} for {} aperture type and {} depth completed.'.format(run+1,config['n_runs'],aperture_type,depth+1))
                             except Exception as e:
                                 logger.error(f"Error: {str(e)}")
@@ -242,7 +242,7 @@ class SurfaceProject:
                         else:
                             logger.info('run {} of {} for depth {} already surface-projected.'.format(run+1,config['n_runs'],depth+1))                
 
-    def _surface_project(self,FS_dir,subject_id,hemi,source_file,projection_surface,out_file):    
+    def _surface_project(self,FS_dir,subject_id,hemi,source_file,interp_method,projection_surface,out_file):    
         # set environment FS subjects dir
         os.environ["SUBJECTS_DIR"] = FS_dir
 
@@ -254,7 +254,7 @@ class SurfaceProject:
         sampler.inputs.sampling_method = "point"
         sampler.inputs.sampling_range = 0.0
         sampler.inputs.sampling_units = "mm"
-        sampler.inputs.interp_method = "trilinear"
+        sampler.inputs.interp_method = interp_method
         sampler.inputs.surface = projection_surface
         sampler.inputs.out_file = out_file
         sampler.run()
