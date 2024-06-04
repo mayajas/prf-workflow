@@ -265,7 +265,7 @@ class PrfMappingConfig:
         self.ap_combine = class_section.get('ap_combine', 'separate') # 'concatenate' or 'separate'
                                                                                 # if concatenate: aperture files and fMRI data are concatenated
                                                                                 # if separate: different apertures are analyzed separately
-        if self.ap_combine not in ['concatenate', 'separate', False]:
+        if self.ap_combine not in ['concatenate', 'separate']:
             self.logger.error('ap_combine (method of combining different stimulus apertures) must be either "concatenate" or "separate". Please check the configuration file.')
             sys.exit(1)
 
