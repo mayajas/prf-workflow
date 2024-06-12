@@ -485,6 +485,7 @@ class MriConfig:
 
     Attributes:
         TR (float): repetition time
+        project_surf (str or float): surface to project the runs to (either "pial" or "white" or float between 0 and 1)
         equivol_fn (str): equivolumetric surface filename prefix
         interp_method (str): interpolation method for surface projection (either "nearest" or "trilinear")
         meanFunc_nii_fn (str): mean functional nitfti filepath and name
@@ -513,9 +514,9 @@ class MriConfig:
         # get config from config file
         if self.do_cf_modeling and cfm_config is not None:
             self.cfm_config = cfm_config
-            self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config = self._load_config(config_file)
+            self.TR, self.project_surf, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config = self._load_config(config_file)
         else:
-            self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
+            self.TR, self.project_surf, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config = self._load_config(config_file)
             self.cf_run_config = None
 
         # get input mri filenames
@@ -542,6 +543,7 @@ class MriConfig:
         class_section = replace_placeholders(class_section, replacements)
 
         self.TR = class_section.get('TR', None) # repetition time
+        self.project_surf = class_section.get('project_surf', 'white') # surface to project the runs to (either "pial" or "white")
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
         self.interp_method = class_section.get('interp_method', 'nearest') # interpolation method for surface projection (either "nearest" or "trilinear")
         self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
@@ -551,6 +553,18 @@ class MriConfig:
         if not isinstance(self.TR, float):
             self.logger.error('TR must be a float. Please check the configuration file.')
             sys.exit(1)
+
+        # check if project_surf is "pial" or "white" or a float between 0 and 1
+        if self.project_surf not in ['pial', 'white']:
+            try:
+                self.project_surf = float(self.project_surf)
+                if self.project_surf < 0 or self.project_surf > 1:
+                    self.logger.error('project_surf must be either "pial", "white", or a float between 0 and 1. Please check the configuration file.')
+                    sys.exit(1)
+            except ValueError:
+                self.logger.error('project_surf must be either "pial", "white", or a float between 0 and 1. Please check the configuration file.')
+                sys.exit(1)
+        
 
         # check that interp_method is either nearest or trilinear
         if self.interp_method not in ['nearest', 'trilinear']:
@@ -591,9 +605,9 @@ class MriConfig:
                         self.logger.info('CFM '+aperture_type+' run '+str(run)+': '+config['nii_fn_list'][run]) 
 
         if self.do_cf_modeling:
-            return self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config
+            return self.TR, self.project_surf, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config, self.cf_run_config
         else:
-            return self.TR, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config
+            return self.TR, self.project_surf, self.equivol_fn, self.interp_method, self.meanFunc_nii_fn, self.prf_run_config
     
     def _get_mri_fns(self):
         # Freesurfer mesh filenames

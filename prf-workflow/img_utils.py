@@ -170,7 +170,7 @@ class SurfaceProject:
         if self.n_surfs > 1:
             projection_surface     = self.mri_config.equi_surf_fn_list[0]
         else:
-            projection_surface     = 'white'
+            projection_surface     = self.mri_config.project_surf
         out_file    = self.mri_config.meanFunc_mgh_fn
         if not os.path.exists(out_file):
             logger.info('Surface-projecting mean functional...')
@@ -199,7 +199,7 @@ class SurfaceProject:
                     if self.n_surfs > 1:
                         projection_surface = self.mri_config.equi_surf_fn_list[depth]
                     elif depth == 0 and self.n_surfs == 1:
-                        projection_surface = 'white'
+                        projection_surface = self.mri_config.project_surf
                     out_file = config['mgh_fn_list'][run][depth]
                     if not os.path.exists(out_file):
                         logger.info('Source file: {}'.format(source_file))
@@ -226,7 +226,7 @@ class SurfaceProject:
                         if self.n_surfs > 1:
                             projection_surface = self.mri_config.equi_surf_fn_list[depth]
                         elif depth == 0 and self.n_surfs == 1:
-                            projection_surface = 'white'
+                            projection_surface = self.mri_config.project_surf
                         out_file = config['mgh_fn_list'][run][depth]
                         if not os.path.exists(out_file):
                             logger.info('Source file: {}'.format(source_file))
@@ -255,7 +255,11 @@ class SurfaceProject:
         sampler.inputs.sampling_range = 0.0
         sampler.inputs.sampling_units = "mm"
         sampler.inputs.interp_method = interp_method
-        sampler.inputs.surface = projection_surface
+        # if projection_surface is a string, use it as the surface name, otherwise if a float: use projfrac
+        if isinstance(projection_surface, str):
+            sampler.inputs.surface = projection_surface
+        elif isinstance(projection_surface, float):
+            sampler.inputs.proj_frac = projection_surface
         sampler.inputs.out_file = out_file
         sampler.run()
 
