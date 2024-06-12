@@ -259,7 +259,7 @@ class SurfaceProject:
         if isinstance(projection_surface, str):
             sampler.inputs.surface = projection_surface
         elif isinstance(projection_surface, float):
-            sampler.inputs.proj_frac = projection_surface
+            sampler.inputs.projfrac = projection_surface
         sampler.inputs.out_file = out_file
         sampler.run()
 
