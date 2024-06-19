@@ -722,8 +722,8 @@ class PrfFitting:
                             prf_params[aperture_type]['x'][depth]                = self.prfpy_output_config[aperture_type]['gf_per_depth'][depth].iterative_search_params[:,0]
                             prf_params[aperture_type]['y'][depth]                = self.prfpy_output_config[aperture_type]['gf_per_depth'][depth].iterative_search_params[:,1]
                             prf_params[aperture_type]['prf_size'][depth]         = self.prfpy_output_config[aperture_type]['gf_per_depth'][depth].iterative_search_params[:,2]
-                            prf_params[aperture_type]['prf_amp'][depth]          = np.empty_like(prf_params[aperture_type]['x'][depth]).fill(np.nan)
-                            prf_params[aperture_type]['bold_baseline'][depth]    = np.empty_like(prf_params[aperture_type]['x'][depth]).fill(np.nan)
+                            prf_params[aperture_type]['prf_amp'][depth]          = self.prfpy_output_config[aperture_type]['gf_per_depth'][depth].iterative_search_params[:,3]
+                            prf_params[aperture_type]['bold_baseline'][depth]    = self.prfpy_output_config[aperture_type]['gf_per_depth'][depth].iterative_search_params[:,4]
                             prf_params[aperture_type]['srf_amp'][depth]          = np.empty_like(prf_params[aperture_type]['x'][depth]).fill(np.nan)
                             prf_params[aperture_type]['srf_size'][depth]         = np.empty_like(prf_params[aperture_type]['x'][depth]).fill(np.nan)
 
