@@ -543,7 +543,7 @@ class MriConfig:
         class_section = replace_placeholders(class_section, replacements)
 
         self.TR = class_section.get('TR', None) # repetition time
-        self.project_surf = class_section.get('project_surf', 'white') # surface to project the runs to (either "pial" or "white")
+        self.project_surf = class_section.get('project_surf', 0.5) # surface to project the runs to (either "pial" or "white" or fraction between 0 and 1)
         self.equivol_fn = class_section.get('equivol_fn', 'equi') # equivolumetric surface filename prefix
         self.interp_method = class_section.get('interp_method', 'nearest') # interpolation method for surface projection (either "nearest" or "trilinear")
         self.meanFunc_nii_fn = class_section.get('meanFunc_nii_fn', None) # mean functional nitfti filepath and name
