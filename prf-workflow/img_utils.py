@@ -81,6 +81,7 @@ class EquivolumetricSurfaces:
         self.mri_config     = mri_config
         self.n_surfs        = project_config.n_surfs
         self.logger         = logger
+        projection_surface  = mri_config.project_surf
 
         if self.n_surfs > 1:
             # Create full file paths for the equivolumetric surfaces
@@ -96,7 +97,7 @@ class EquivolumetricSurfaces:
                 self.logger.info('Generating {} equivolumetric surfaces...'.format(self.n_surfs))
                 self._gen_equivol_surfs()
         else:
-            self.logger.info('Analysis will be run on wm surface.') # TODO: implement other single-surface options
+            self.logger.info('Analysis will be run on single surface: {}'.format(projection_surface))
 
     def _gen_equivol_surfs(self):
         """
