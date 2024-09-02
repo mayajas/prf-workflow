@@ -39,7 +39,7 @@ class PrfpyStimulus:
     """
     def __init__(self, dir_config, mri_config, prf_config, logger):
         self.dir_config             = dir_config
-        self.screen_halfheight_cm   = prf_config.screen_halfheight_cm
+        self.screen_height_cm       = prf_config.screen_height_cm
         self.screen_distance_cm     = prf_config.screen_distance_cm
         self.TR                     = mri_config.TR
 
@@ -80,7 +80,7 @@ class PrfpyStimulus:
 
             if not self.prfpy_output_config[aperture_type]['stim']:
                 self.prfpy_output_config[aperture_type]['stim'] = \
-                                        PRFStimulus2D(screen_size_cm=self.screen_halfheight_cm,
+                                        PRFStimulus2D(screen_size_cm=self.screen_height_cm,
                                             screen_distance_cm=self.screen_distance_cm,
                                             design_matrix=config['design_matrix'],
                                             TR=self.TR)
