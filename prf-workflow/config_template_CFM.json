@@ -33,7 +33,9 @@
         "normalize_RFs": false,
         "rsq_thresh_itfit": 0.0005,
         "rsq_thresh_viz": 0.01,
-        "reference_aperture": "bar"
+        "reference_aperture": "bar",
+        "ap_combine": "concatenate",
+        "concat_padding": 0
     },
     "MriConfig": {
         "TR": 2.0,
@@ -85,6 +87,8 @@
         "CF_sizes": [0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 30, 40],
         "verbose": true,
         "reference_aperture": "bar",
+        "ap_combine": "concatenate",
+        "concat_padding": 0,
         "prf_rsq_thresh": 0.15,
         "rsq_thresh_itfit": 0.15,
         "rsq_thresh_viz": 0.01

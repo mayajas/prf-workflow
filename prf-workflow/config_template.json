@@ -35,7 +35,7 @@
         "overwrite_viz": false,
         "reference_aperture": "bar",
         "ap_combine": "concatenate",
-        "concat_padding": 10
+        "concat_padding": 0
     },
     "MriConfig": {
         "TR": 2.0,

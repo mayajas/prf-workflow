@@ -270,7 +270,6 @@ class CleanInputData:
     """
     def __init__(self, project_config, prf_config, mri_config, data_clean_config, logger, cfm_config=None):
         self.n_surfs            = project_config.n_surfs
-        self.ap_combine         = prf_config.ap_combine
         self.concat_padding     = prf_config.concat_padding
         self.occ_mask_fn        = mri_config.occ_mask_fn
         self.prf_run_config     = mri_config.prf_run_config
@@ -331,8 +330,10 @@ class CleanInputData:
             mri_config.cf_run_config = self._clean_data_cfm()
 
         ## Combine apertures (if applicable)
-        if self.ap_combine == 'concatenate':
+        if self.prf_config.ap_combine == 'concatenate':
             mri_config.prf_run_config = self._combine_apertures()
+        if self.cfm_config.ap_combine == 'concatenate':
+            mri_config.cf_run_config = self._combine_apertures_cfm()
 
     def _make_occipital_mask(self):
         """
@@ -628,7 +629,78 @@ class CleanInputData:
 
             return self.prf_run_config
 
+    def _combine_apertures_cfm(self):
+        """
+        This function combines data from the various stimulus apertures by concatenating the preprocessed data across apertures.
+        """
+        self.logger.info('Combining data from different stimulus apertures...')
+        if not os.path.exists(self.cfm_config.input_data_dict_fn):
+            self.logger.error('The cleaned CFM data dictionary does not exist. Please run the data cleaning step before combining apertures.')
+            sys.exit(1)
+        else:
+            self.logger.info('Cleaned data already exists at {}'.format(self.cfm_config.input_data_dict_fn))
+            self.logger.info('Loading cleaned data...')
+            with open(self.cfm_config.input_data_dict_fn, 'rb') as pickle_file:
+                self.cf_run_config = pickle.load(pickle_file)
 
+            self.logger.info('Combining data from different stimulus apertures...')
+            self.cf_run_config_combined = {
+                'combined': {
+                    'design_matrix': [],
+                    'preproc_data_avg': [],
+                    'preproc_data_per_depth': [0] * self.n_surfs
+                }
+            }
+
+            ap = 0
+            for aperture_type, config in self.cf_run_config.items():
+                if aperture_type == 'combined': 
+                    continue
+                if ap == 0:
+                    self.cf_run_config_combined['combined']['design_matrix'] = config['design_matrix']
+                    self.cf_run_config_combined['combined']['preproc_data_avg'] = config['preproc_data_avg']
+                    for depth in range(0,self.n_surfs):
+                        self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = config['preproc_data_per_depth'][depth]
+                else:
+                    if self.concat_padding > 0:
+                        ## add "padding" before concatenating the data from additional apertures
+                        self.logger.info('Adding padding before concatenating the data from additional apertures...')
+                        padding_design_matrix = np.zeros([self.cf_run_config_combined['combined']['design_matrix'].shape[0],
+                                                          self.cf_run_config_combined['combined']['design_matrix'].shape[1],
+                                                          self.concat_padding])
+                        padding_data = np.zeros([self.cf_run_config_combined['combined']['preproc_data_avg'].shape[0],
+                                                 self.concat_padding])
+                        
+                        self.cf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.cf_run_config_combined['combined']['design_matrix'], 
+                                                                                               padding_design_matrix,
+                                                                                               config['design_matrix']), axis=2)
+                        self.cf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_avg'],
+                                                                                                  padding_data,
+                                                                                                  config['preproc_data_avg']), axis=1)
+                        for depth in range(0,self.n_surfs):
+                            self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth],
+                                                                                                                padding_data,
+                                                                                                                config['preproc_data_per_depth'][depth]), axis=1)
+                    else:
+                        self.logger.info('Padding is set to 0. It is highly recommended to set the padding to a value greater than 0.')
+                        self.cf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.cf_run_config_combined['combined']['design_matrix'], 
+                                                                                               config['design_matrix']), axis=2)
+                        self.cf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_avg'],
+                                                                                                  config['preproc_data_avg']), axis=1)
+                        for depth in range(0,self.n_surfs):
+                            self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth],
+                                                                                                                config['preproc_data_per_depth'][depth]), axis=1)
+                ap += 1
+
+            # write cf_run_config_combined to cf_run_config
+            self.cf_run_config['combined'] = self.cf_run_config_combined['combined']
+
+            ## Save combined data
+            self.logger.info('Saving combined data...')
+            with open(self.cfm_config.input_data_dict_fn, 'wb') as pickle_file:
+                pickle.dump(self.cf_run_config, pickle_file)
+
+            return self.cf_run_config
 
 
 

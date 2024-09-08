@@ -353,6 +353,8 @@ class CfModelingConfig:
         input_data_dict_fn (str): input data dictionary filename
         output_data_dict_fn (str): output data dictionary filename
         cfm_param_fn (str): CFM parameter filename
+        ap_combine (str): method of combining different stimulus apertures
+        concat_padding (int): how many artificial baseline volumes to add between different apertures when concatenating
     """
     def __init__(self, config_file, project_config, dir_config, prf_config, logger):
         self.n_surfs        = project_config.n_surfs
@@ -362,7 +364,7 @@ class CfModelingConfig:
         self.prf_output_dir = prf_config.prf_output_dir
         self.ROI_dir        = dir_config.ROI_dir
 
-        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.reference_aperture, self.prf_rsq_thresh, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz = self._load_config(config_file)
+        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.reference_aperture, self.prf_rsq_thresh, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz, self.ap_combine, self.concat_padding = self._load_config(config_file)
 
         self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn, self.cfm_param_fn = self._get_cf_output_fns()
 
@@ -462,6 +464,20 @@ class CfModelingConfig:
             self.logger.error('reference_aperture must be one of the prf apertures. Please check the configuration file.')
             sys.exit(1)
 
+        # how to deal with multiple stimulus apertures
+        self.ap_combine = class_section.get('ap_combine', 'separate') # 'concatenate' or 'separate'
+                                                                                # if concatenate: aperture files and fMRI data are concatenated
+                                                                                # if separate: different apertures are analyzed separately
+        if self.ap_combine not in ['concatenate', 'separate']:
+            self.logger.error('ap_combine (method of combining different stimulus apertures) must be either "concatenate" or "separate". Please check the configuration file.')
+            sys.exit(1)
+
+        if self.ap_combine == 'concatenate':
+            self.concat_padding = class_section.get('concat_padding', 10) # int
+                                                                          # how many artificial baseline volumes to add between different apertures when concatenating
+        else:
+            self.concat_padding = None
+
         self.prf_rsq_thresh     = class_section.get('prf_rsq_thresh', None)     # float
                                                                                 # Rsq threshold for pRF model fit (vertex must have rsq above
                                                                                 # this threshold to be included in analysis). Must be between 0 and 1.
@@ -477,7 +493,7 @@ class CfModelingConfig:
                                                                                 # whether to use bounds for the CF model fit
         self.use_constraints    = class_section.get('use_constraints', True)    # boolean, optional
                                                                                 # whether to use constraints for the CF model fit
-        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.reference_aperture, self.prf_rsq_thresh, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz
+        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.reference_aperture, self.prf_rsq_thresh, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz, self.ap_combine, self.concat_padding
     
     def _get_cf_output_fns(self):
 
@@ -519,7 +535,7 @@ class MriConfig:
     def __init__(self, config_file, project_config, dir_config, prf_config, logger, cfm_config=None):
         self.prf_output_dir     = prf_config.prf_output_dir
         self.reference_aperture = prf_config.reference_aperture
-        self.ap_combine         = prf_config.ap_combine
+        self.prf_config         = prf_config
         self.concat_padding     = prf_config.concat_padding
         self.FS_dir             = dir_config.FS_dir
         self.subject_id         = project_config.subject_id
@@ -540,7 +556,7 @@ class MriConfig:
         self.gm_surf_fn, self.wm_surf_fn, self.inflated_surf_fn, self.cort_label_fn, self.equi_surf_fn_list, self.meanFunc_mgh_fn, self.occ_mask_fn = self._get_mri_fns()
 
         # get info about pRF runs (apertures, nr sessions per run, filenames of projected runs)
-        self.prf_run_config, self.prfpy_output_config, self.ap_combine = self._get_prf_run_list()
+        self.prf_run_config, self.prfpy_output_config = self._get_prf_run_list()
 
         # get info about CFM runs (nr sessions per run, filenames of projected runs)
         if self.do_cf_modeling and cfm_config is not None:
@@ -662,9 +678,8 @@ class MriConfig:
             config['mgh_fn_list'] = mgh_fn_list
 
         aperture_types = self.prf_run_config.keys()
-        if self.ap_combine == 'separate' or self.ap_combine is None or len(aperture_types) == 1:
-            self.ap_combine = 'separate'
-        elif self.ap_combine == 'concatenate':
+        
+        if self.prf_config.ap_combine == 'concatenate':
             aperture_types = ['combined']
 
         prfpy_output_config = {
@@ -701,7 +716,7 @@ class MriConfig:
             } for key in aperture_types
         }            
 
-        return self.prf_run_config, prfpy_output_config, self.ap_combine
+        return self.prf_run_config, prfpy_output_config
     
     def _get_cf_run_config(self):
         for aperture_type, config in self.cf_run_config.items():
@@ -714,6 +729,10 @@ class MriConfig:
 
             config['mgh_fn_list'] = mgh_fn_list
 
+        aperture_types = self.cf_run_config.keys()
+        
+        if self.cfm_config.ap_combine == 'concatenate':
+            aperture_types = ['combined']
 
         cfm_output_config = {
             key: {
@@ -735,7 +754,7 @@ class MriConfig:
                     }
                         
                 } for subsurf in self.cfm_config.subsurfaces
-            } for key in self.cf_run_config
+            } for key in aperture_types
         }
 
         return self.cf_run_config, cfm_output_config
