@@ -685,12 +685,13 @@ class CreateSubsurfaces:
                     self.logger.info('ROI label: {}'.format(subsurface['roi_label']))
                     self.logger.info('Cortical surface: {}'.format(subsurface['surf_fn']))
                     self.cfm_output_config[aperture_type][subsurf_name]['subsurface']   = nib.freesurfer.io.read_label(subsurface['roi_label'])
+                    self.logger.info('Number of vertices in current subsurface: {}'.format(len(self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])))
                     self.cfm_output_config[aperture_type][subsurf_name]['surf']         = nib.freesurfer.read_geometry(subsurface['surf_fn'])
 
                     if self.prf_rsq_thresh is not None:
                         self.logger.info('Removing vertices with R^2 below threshold in pRF model from subsurface...')
                         # Load rsq map (output of pRF fitting)
-                        self.logger.info('Loading relevant pRF data...')
+                        self.logger.info('Loading pRF data from reference aperture ({})...'.format(self.reference_aperture))
                         rsq_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='rsq',aperture_type=self.reference_aperture,depth='avg')
                         rsq_map = np.squeeze(nib.load(rsq_map_mgh).get_fdata())
                     
@@ -699,11 +700,10 @@ class CreateSubsurfaces:
                         self.logger.info('Applying R^2 threshold: {}'.format(self.prf_rsq_thresh))
                         temp = self.cfm_output_config[aperture_type][subsurf_name]['subsurface']
                         self.cfm_output_config[aperture_type][subsurf_name]['subsurface'] = temp[rsq_map[self.cfm_output_config[aperture_type][subsurf_name]['subsurface']] > self.prf_rsq_thresh]
-
+                        self.logger.info('Number of vertices in current subsurface after applying R^2 threshold: {}'.format(len(self.cfm_output_config[aperture_type][subsurf_name]['subsurface'])))
             
                     # Get number of vertices in current subsurface
                     n_vtx_sub     = self.cfm_output_config[aperture_type][subsurf_name]['subsurface'].shape[0]
-                    self.logger.info('Number of vertices in current subsurface: {}'.format(n_vtx_sub))
 
                     # for each vertex in subsurface, get distance to all other vertices within the subsurface
                     self.logger.info('Calculating distance matrix...')
