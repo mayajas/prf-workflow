@@ -634,12 +634,15 @@ class CleanInputData:
 
 class CreateSubsurfaces:
     """This class contains functions that are used to generate the subsurfaces used for connective field modeling."""
-    def __init__(self, project_config, mri_config, cfm_config, logger):
+    def __init__(self, project_config, mri_config, prf_config, cfm_config, logger):
         self.n_procs            = project_config.n_procs
+        self.prf_config         = prf_config
         self.cf_run_config      = mri_config.cf_run_config
         self.cfm_output_config  = mri_config.cfm_output_config
         self.occ_mask_fn        = mri_config.occ_mask_fn
         self.cfm_config         = cfm_config
+        self.prf_rsq_thresh     = cfm_config.prf_rsq_thresh
+        self.reference_aperture = cfm_config.reference_aperture
         self.cort_label_fn      = mri_config.cort_label_fn
         self.target_surfs       = cfm_config.target_surfs
         self.logger             = logger
@@ -683,6 +686,20 @@ class CreateSubsurfaces:
                     self.logger.info('Cortical surface: {}'.format(subsurface['surf_fn']))
                     self.cfm_output_config[aperture_type][subsurf_name]['subsurface']   = nib.freesurfer.io.read_label(subsurface['roi_label'])
                     self.cfm_output_config[aperture_type][subsurf_name]['surf']         = nib.freesurfer.read_geometry(subsurface['surf_fn'])
+
+                    if self.prf_rsq_thresh is not None:
+                        self.logger.info('Removing vertices with R^2 below threshold in pRF model from subsurface...')
+                        # Load rsq map (output of pRF fitting)
+                        self.logger.info('Loading relevant pRF data...')
+                        rsq_map_mgh = self.prf_config.pRF_param_map_mgh.format(param_name='rsq',aperture_type=self.reference_aperture,depth='avg')
+                        rsq_map = np.squeeze(nib.load(rsq_map_mgh).get_fdata())
+                    
+
+                        # Remove vertices with R^2 below threshold from subsurface
+                        self.logger.info('Applying R^2 threshold: {}'.format(self.prf_rsq_thresh))
+                        temp = self.cfm_output_config[aperture_type][subsurf_name]['subsurface']
+                        self.cfm_output_config[aperture_type][subsurf_name]['subsurface'] = temp[rsq_map[self.cfm_output_config[aperture_type][subsurf_name]['subsurface']] > self.prf_rsq_thresh]
+
             
                     # Get number of vertices in current subsurface
                     n_vtx_sub     = self.cfm_output_config[aperture_type][subsurf_name]['subsurface'].shape[0]

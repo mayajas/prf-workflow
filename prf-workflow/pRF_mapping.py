@@ -77,7 +77,7 @@ def main(config_file,sub_idx,hem_idx):
             CleanInputData(project_config, prf_config, mri_config, data_clean_config, logger, cfm_config)
 
             ## Generate subsurfaces (source ROI for CF modeling)
-            CreateSubsurfaces(project_config, mri_config, cfm_config, logger)
+            CreateSubsurfaces(project_config, mri_config, prf_config, cfm_config, logger)
 
         ###########################################################################################
         ### PRF mapping

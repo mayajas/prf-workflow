@@ -358,10 +358,11 @@ class CfModelingConfig:
         self.n_surfs        = project_config.n_surfs
         self.hemi           = project_config.hemi
         self.logger         = logger
+        self.prf_config     = prf_config
         self.prf_output_dir = prf_config.prf_output_dir
         self.ROI_dir        = dir_config.ROI_dir
 
-        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz = self._load_config(config_file)
+        self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.reference_aperture, self.prf_rsq_thresh, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz = self._load_config(config_file)
 
         self.cfm_output_dir, self.input_data_dict_fn, self.output_data_dict_fn, self.cfm_param_fn = self._get_cf_output_fns()
 
@@ -448,6 +449,22 @@ class CfModelingConfig:
             self.CF_sizes = np.array(self.CF_sizes)   
 
         # Input parameters for model fit
+        self.reference_aperture       = class_section.get('reference_aperture', None)       # string, optional
+                                                                                # prf reference aperture to be used for thresholding out
+                                                                                # vertices with low rsq values
+        # make sure that reference_aperture is either None or a string
+        if self.reference_aperture is not None and not isinstance(self.reference_aperture, str):
+            self.logger.error('reference_aperture must be a string. Please check the configuration file.')
+            sys.exit(1)
+        
+        # make sure that if reference_aperture is not None, it is in the list of prf apertures
+        if self.reference_aperture is not None and self.reference_aperture not in self.prf_config.prf_run_config['aperture_types']:
+            self.logger.error('reference_aperture must be one of the prf apertures. Please check the configuration file.')
+            sys.exit(1)
+
+        self.prf_rsq_thresh     = class_section.get('prf_rsq_thresh', None)     # float
+                                                                                # Rsq threshold for pRF model fit (vertex must have rsq above
+                                                                                # this threshold to be included in analysis). Must be between 0 and 1.
         self.rsq_thresh_itfit   = class_section.get('rsq_thresh_itfit', 0.1)    # float
                                                                                 # Rsq threshold for iterative fitting. Must be between 0 and 1.         
         self.rsq_thresh_viz     = class_section.get('rsq_thresh_viz', 0.1)      # float
@@ -460,7 +477,7 @@ class CfModelingConfig:
                                                                                 # whether to use bounds for the CF model fit
         self.use_constraints    = class_section.get('use_constraints', True)    # boolean, optional
                                                                                 # whether to use constraints for the CF model fit
-        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz
+        return self.roi_list, self.subsurfaces, self.target_surfs, self.CF_sizes, self.reference_aperture, self.prf_rsq_thresh, self.rsq_thresh_itfit, self.rsq_thresh_viz, self.verbose, self.use_bounds, self.use_constraints, self.overwrite_viz
     
     def _get_cf_output_fns(self):
 
