@@ -331,7 +331,7 @@ class CleanInputData:
 
         ## Combine apertures (if applicable)
         if self.prf_config.ap_combine == 'concatenate':
-            mri_config.prf_run_config = self._combine_apertures()
+            mri_config.prf_run_config = self._combine_apertures_prf()
         if self.cfm_config.ap_combine == 'concatenate':
             mri_config.cf_run_config = self._combine_apertures_cfm()
 
@@ -556,7 +556,7 @@ class CleanInputData:
 
         return self.cf_run_config
     
-    def _combine_apertures(self):
+    def _combine_apertures_prf(self):
         """
         This function combines data from the various stimulus apertures by concatenating the preprocessed data across apertures.
         """
@@ -609,7 +609,7 @@ class CleanInputData:
                                                                                                                 padding_data,
                                                                                                                 config['preproc_data_per_depth'][depth]), axis=1)
                     else:
-                        self.logger.info('Padding is set to 0. It is highly recommended to set the padding to a value greater than 0.')
+                        self.logger.info('Padding is set to 0.')
                         self.prf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.prf_run_config_combined['combined']['design_matrix'], 
                                                                                                config['design_matrix']), axis=2)
                         self.prf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.prf_run_config_combined['combined']['preproc_data_avg'],
@@ -646,7 +646,6 @@ class CleanInputData:
             self.logger.info('Combining data from different stimulus apertures...')
             self.cf_run_config_combined = {
                 'combined': {
-                    'design_matrix': [],
                     'preproc_data_avg': [],
                     'preproc_data_per_depth': [0] * self.n_surfs
                 }
@@ -657,7 +656,6 @@ class CleanInputData:
                 if aperture_type == 'combined': 
                     continue
                 if ap == 0:
-                    self.cf_run_config_combined['combined']['design_matrix'] = config['design_matrix']
                     self.cf_run_config_combined['combined']['preproc_data_avg'] = config['preproc_data_avg']
                     for depth in range(0,self.n_surfs):
                         self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = config['preproc_data_per_depth'][depth]
@@ -665,15 +663,11 @@ class CleanInputData:
                     if self.concat_padding > 0:
                         ## add "padding" before concatenating the data from additional apertures
                         self.logger.info('Adding padding before concatenating the data from additional apertures...')
-                        padding_design_matrix = np.zeros([self.cf_run_config_combined['combined']['design_matrix'].shape[0],
-                                                          self.cf_run_config_combined['combined']['design_matrix'].shape[1],
-                                                          self.concat_padding])
+                    
                         padding_data = np.zeros([self.cf_run_config_combined['combined']['preproc_data_avg'].shape[0],
                                                  self.concat_padding])
                         
-                        self.cf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.cf_run_config_combined['combined']['design_matrix'], 
-                                                                                               padding_design_matrix,
-                                                                                               config['design_matrix']), axis=2)
+
                         self.cf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_avg'],
                                                                                                   padding_data,
                                                                                                   config['preproc_data_avg']), axis=1)
@@ -682,9 +676,7 @@ class CleanInputData:
                                                                                                                 padding_data,
                                                                                                                 config['preproc_data_per_depth'][depth]), axis=1)
                     else:
-                        self.logger.info('Padding is set to 0. It is highly recommended to set the padding to a value greater than 0.')
-                        self.cf_run_config_combined['combined']['design_matrix'] = np.concatenate((self.cf_run_config_combined['combined']['design_matrix'], 
-                                                                                               config['design_matrix']), axis=2)
+                        self.logger.info('Padding is set to 0.')
                         self.cf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_avg'],
                                                                                                   config['preproc_data_avg']), axis=1)
                         for depth in range(0,self.n_surfs):
