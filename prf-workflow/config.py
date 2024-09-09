@@ -454,15 +454,9 @@ class CfModelingConfig:
         self.reference_aperture       = class_section.get('reference_aperture', None)       # string, optional
                                                                                 # prf reference aperture to be used for thresholding out
                                                                                 # vertices with low rsq values
-        # make sure that reference_aperture is either None or a string
-        if self.reference_aperture is not None and not isinstance(self.reference_aperture, str):
-            self.logger.error('reference_aperture must be a string. Please check the configuration file.')
-            sys.exit(1)
-        
-        # make sure that if reference_aperture is not None, it is in the list of prf apertures
-        if self.reference_aperture is not None and self.reference_aperture not in self.prf_config.prf_run_config['aperture_types']:
-            self.logger.error('reference_aperture must be one of the prf apertures. Please check the configuration file.')
-            sys.exit(1)
+        # if not none, print out the reference aperture
+        if self.reference_aperture is not None:
+            self.logger.info('Selected CFM reference aperture: '+self.reference_aperture)
 
         # how to deal with multiple stimulus apertures
         self.ap_combine = class_section.get('ap_combine', 'separate') # 'concatenate' or 'separate'
@@ -534,7 +528,6 @@ class MriConfig:
 
     def __init__(self, config_file, project_config, dir_config, prf_config, logger, cfm_config=None):
         self.prf_output_dir     = prf_config.prf_output_dir
-        self.reference_aperture = prf_config.reference_aperture
         self.prf_config         = prf_config
         self.concat_padding     = prf_config.concat_padding
         self.FS_dir             = dir_config.FS_dir
@@ -620,13 +613,18 @@ class MriConfig:
                     self.logger.info('PRF '+aperture_type+' run '+str(run)+': '+config['nii_fn_list'][run])
 
         # Check that the reference aperture is among the apertures provided in prf_run_config
-        if (self.reference_aperture is not None) and (self.reference_aperture not in self.prf_run_config):
-            self.logger.error('The selected reference aperture ('+self.reference_aperture+') is not present in the list of all stimulus apertures.')
+        if (self.prf_config.reference_aperture is not None) and (self.prf_config.reference_aperture not in self.prf_run_config):
+            self.logger.error('The selected reference aperture ('+self.prf_config.reference_aperture+') is not present in the list of all stimulus apertures.')
             sys.exit(1)
 
         # Load CFM config (if applicable)
         if self.do_cf_modeling:
             self.cf_run_config  = class_section.get('cf_run_config',  None) # dictionary containing info about CFM runs
+
+            # Check that the reference aperture is among the apertures provided in prf_run_config
+            if (self.cfm_config.reference_aperture is not None) and (self.cfm_config.reference_aperture not in self.prf_run_config):
+                self.logger.error('The selected CFM reference aperture ('+self.cfm_config.reference_aperture+') is not present in the list of all PRF stimulus apertures.')
+                sys.exit(1)
 
             # Check that CFM nifti files exist  
             for aperture_type, config in self.cf_run_config.items():

@@ -87,7 +87,7 @@
         "CF_sizes": [0.5, 1, 2, 3, 4, 5, 7, 10, 15, 20, 30, 40],
         "verbose": true,
         "reference_aperture": "bar",
-        "ap_combine": "concatenate",
+        "ap_combine": "separate",
         "concat_padding": 0,
         "prf_rsq_thresh": 0.15,
         "rsq_thresh_itfit": 0.15,
