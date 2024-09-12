@@ -622,9 +622,10 @@ class MriConfig:
             self.cf_run_config  = class_section.get('cf_run_config',  None) # dictionary containing info about CFM runs
 
             # Check that the reference aperture is among the apertures provided in prf_run_config or, if it's 'combined', check that self.prf_config.ap_combine == 'concatenate'
-            if ((self.cfm_config.reference_aperture is not None) and (self.cfm_config.reference_aperture not in self.prf_run_config)) or (self.cfm_config.reference_aperture == 'combined' and self.prf_config.ap_combine != 'concatenate'):
-                self.logger.error('The selected CFM reference aperture ('+self.cfm_config.reference_aperture+') is not present in the list of all PRF stimulus apertures.')
-                sys.exit(1)
+            if (self.cfm_config.reference_aperture is not None) and (self.cfm_config.reference_aperture not in self.prf_run_config):
+                if (self.cfm_config.reference_aperture == 'combined') and (self.prf_config.ap_combine != 'concatenate'):
+                    self.logger.error('The selected CFM reference aperture ('+self.cfm_config.reference_aperture+') is not present in the list of all PRF stimulus apertures.')
+                    sys.exit(1)
 
             # Check that CFM nifti files exist  
             for aperture_type, config in self.cf_run_config.items():
