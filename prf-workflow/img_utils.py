@@ -546,7 +546,7 @@ class CleanInputData:
 
             # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg')
             for aperture_type, config in self.cf_run_config.items():
-                for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']:
+                for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths','preproc_data_avg']:
                     if key not in config:
                         self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
                         self.logger.error('Cleaned data dictionary must have the following keys: {}'.format(['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']))
@@ -560,7 +560,6 @@ class CleanInputData:
         """
         This function combines data from the various stimulus apertures by concatenating the preprocessed data across apertures.
         """
-        self.logger.info('Combining data from different stimulus apertures...')
         if not os.path.exists(self.prf_config.input_data_dict_fn):
             self.logger.error('The cleaned data dictionary does not exist. Please run the data cleaning step before combining apertures.')
             sys.exit(1)
@@ -570,7 +569,7 @@ class CleanInputData:
             with open(self.prf_config.input_data_dict_fn, 'rb') as pickle_file:
                 self.prf_run_config = pickle.load(pickle_file)
 
-            self.logger.info('Combining data from different stimulus apertures...')
+            self.logger.info('Combining data from different pRF stimulus apertures...')
             self.prf_run_config_combined = {
                 'combined': {
                     'design_matrix': [],
@@ -633,7 +632,6 @@ class CleanInputData:
         """
         This function combines data from the various stimulus apertures by concatenating the preprocessed data across apertures.
         """
-        self.logger.info('Combining data from different stimulus apertures...')
         if not os.path.exists(self.cfm_config.input_data_dict_fn):
             self.logger.error('The cleaned CFM data dictionary does not exist. Please run the data cleaning step before combining apertures.')
             sys.exit(1)
@@ -643,7 +641,7 @@ class CleanInputData:
             with open(self.cfm_config.input_data_dict_fn, 'rb') as pickle_file:
                 self.cf_run_config = pickle.load(pickle_file)
 
-            self.logger.info('Combining data from different stimulus apertures...')
+            self.logger.info('Combining data from different CFM stimulus apertures...')
             self.cf_run_config_combined = {
                 'combined': {
                     'preproc_data_avg': [],
