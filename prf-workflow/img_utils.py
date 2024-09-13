@@ -544,9 +544,9 @@ class CleanInputData:
                             self.logger.error('It is suggested to delete the cleaned data dictionary and the occipital mask and rerun the analysis.')
                             sys.exit(1)
 
-            # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_avg')
+            # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth')
             for aperture_type, config in self.cf_run_config.items():
-                for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths','preproc_data_avg']:
+                for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']:
                     if key not in config:
                         self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
                         self.logger.error('Cleaned data dictionary must have the following keys: {}'.format(['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']))
@@ -644,7 +644,6 @@ class CleanInputData:
             self.logger.info('Combining data from different CFM stimulus apertures...')
             self.cf_run_config_combined = {
                 'combined': {
-                    'preproc_data_avg': [],
                     'preproc_data_per_depth': [0] * self.n_surfs
                 }
             }
@@ -654,7 +653,6 @@ class CleanInputData:
                 if aperture_type == 'combined': 
                     continue
                 if ap == 0:
-                    self.cf_run_config_combined['combined']['preproc_data_avg'] = config['preproc_data_avg']
                     for depth in range(0,self.n_surfs):
                         self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = config['preproc_data_per_depth'][depth]
                 else:
@@ -662,21 +660,15 @@ class CleanInputData:
                         ## add "padding" before concatenating the data from additional apertures
                         self.logger.info('Adding padding before concatenating the data from additional apertures...')
                     
-                        padding_data = np.zeros([self.cf_run_config_combined['combined']['preproc_data_avg'].shape[0],
+                        padding_data = np.zeros([self.cf_run_config_combined['combined']['preproc_data_per_depth'][0].shape[0],
                                                  self.concat_padding])
-                        
 
-                        self.cf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_avg'],
-                                                                                                  padding_data,
-                                                                                                  config['preproc_data_avg']), axis=1)
                         for depth in range(0,self.n_surfs):
                             self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth],
                                                                                                                 padding_data,
                                                                                                                 config['preproc_data_per_depth'][depth]), axis=1)
                     else:
                         self.logger.info('Padding is set to 0.')
-                        self.cf_run_config_combined['combined']['preproc_data_avg'] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_avg'],
-                                                                                                  config['preproc_data_avg']), axis=1)
                         for depth in range(0,self.n_surfs):
                             self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth],
                                                                                                                 config['preproc_data_per_depth'][depth]), axis=1)
