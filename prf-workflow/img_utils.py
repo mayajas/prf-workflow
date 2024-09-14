@@ -537,6 +537,8 @@ class CleanInputData:
 
             # Check if the cleaned data matches the dimensions of the occipital mask
             for aperture_type, config in self.cf_run_config.items():
+                if aperture_type == 'combined': 
+                    continue
                 for run in range(0,config['n_runs']):
                     for depth in range(0,self.n_surfs):
                         if config['masked_data'][run][depth].shape[1] != self.occ_mask.shape[0]:
@@ -546,6 +548,8 @@ class CleanInputData:
 
             # Check if the cleaned data dictionary has all the needed keys ('filtered_data', 'masked_data', 'preproc_data_per_depth')
             for aperture_type, config in self.cf_run_config.items():
+                if aperture_type == 'combined': 
+                    continue
                 for key in ['filtered_data', 'masked_data', 'preproc_data_per_depth', 'preproc_data_concatenated_depths']:
                     if key not in config:
                         self.logger.error('Cleaned data dictionary does not have the key: {}'.format(key))
@@ -644,7 +648,8 @@ class CleanInputData:
             self.logger.info('Combining data from different CFM stimulus apertures...')
             self.cf_run_config_combined = {
                 'combined': {
-                    'preproc_data_per_depth': [0] * self.n_surfs
+                    'preproc_data_per_depth': [0] * self.n_surfs,
+                    'preproc_data_concatenated_depths': [0]
                 }
             }
 
@@ -673,6 +678,10 @@ class CleanInputData:
                             self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth] = np.concatenate((self.cf_run_config_combined['combined']['preproc_data_per_depth'][depth],
                                                                                                                 config['preproc_data_per_depth'][depth]), axis=1)
                 ap += 1
+            
+            # Concatenate the preprocessed data across depths
+            self.logger.info('Concatenating the preprocessed data across depths...')
+            self.cf_run_config_combined['combined']['preproc_data_concatenated_depths'] = np.concatenate([ self.cf_run_config_combined['combined']['preproc_data_per_depth'][index] for index in self.target_surfs ],axis=0)
 
             # write cf_run_config_combined to cf_run_config
             self.cf_run_config['combined'] = self.cf_run_config_combined['combined']
@@ -728,6 +737,9 @@ class CreateSubsurfaces:
         self.cort = nib.freesurfer.read_label(self.cort_label_fn) 
 
         for aperture_type, config in self.cfm_output_config.items():
+            # if self.cfm_output_config.items() contains 'combined' and this aperture_type is not 'combined', skip
+            if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info('Creating subsurfaces for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 # if the keys ('subsurface', 'surf', 'dist', 'data') are empty, then fill them (use a.any())

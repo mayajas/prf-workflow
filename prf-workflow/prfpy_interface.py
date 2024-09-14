@@ -937,6 +937,8 @@ class CfStimulus:
         
         # Define stimulus object for each aperture type and each subsurface
         for aperture_type, config in self.cfm_output_config.items():
+            if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info('Creating CFM stimulus for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
@@ -1061,6 +1063,8 @@ class CfModeling:
 
         # Define CF model
         for aperture_type, config in self.cfm_output_config.items():
+            if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info('Defining CF model for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
@@ -1077,6 +1081,8 @@ class CfModeling:
 
         # Define CF model fitter
         for aperture_type, config in self.cfm_output_config.items():
+            if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info('Defining CF model fitter for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
@@ -1095,6 +1101,8 @@ class CfModeling:
 
         # Fit CF model: grid fit
         for aperture_type, config in self.cfm_output_config.items():
+            if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info('Grid fitting CF model for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
@@ -1115,6 +1123,8 @@ class CfModeling:
 
         # Fit CF model: iterative fit
         for aperture_type, config in self.cfm_output_config.items():
+            if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                continue
             self.logger.info('Iterative fitting CF model for aperture type: {}'.format(aperture_type))
             for subsurf_name, subsurface in config.items():
                 self.logger.info('Subsurface: {}'.format(subsurf_name))
@@ -1162,6 +1172,8 @@ class CfModeling:
                 }
 
                 for aperture_type, config in self.cfm_output_config.items():
+                    if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                        continue
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     for subsurf_name, subsurface in config.items():
                         self.logger.info(f"[[{subsurf_name} subsurface]]")
@@ -1200,6 +1212,8 @@ class CfModeling:
                 }
 
                 for aperture_type, config in self.cfm_output_config.items():
+                    if 'combined' in self.cfm_output_config.keys() and aperture_type != 'combined':
+                        continue
                     self.logger.info(f"[[{aperture_type} aperture]]")
                     for subsurf_name, subsurface in config.items():
                         self.logger.info(f"[[{subsurf_name} subsurface]]")
