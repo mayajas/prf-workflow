@@ -132,7 +132,8 @@ class DirConfig:
             sys.exit(1)
         else:
             self.logger.info('Surface tools directory: ' + self.surface_tools_dir)
-        if not os.path.exists(self.ROI_dir) and self.project_config.do_cf_modeling:
+        if self.project_config.do_cf_modeling:
+            if not os.path.exists(self.ROI_dir):
                 # if ROI dir doesn't exist, don't run CF modeling
                 self.logger.error('ROI directory does not exist in the location specified in the config file: '+self.ROI_dir)
                 self.logger.error('CF modeling will not be performed.')
