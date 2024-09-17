@@ -139,8 +139,8 @@ class DirConfig:
                 self.logger.error('CF modeling will not be performed.')
                 # set do_cf_modeling to False
                 self.project_config.do_cf_modeling = False
-        else:
-            self.logger.info('ROI directory: ' + self.ROI_dir)
+            else:
+                self.logger.info('ROI directory: ' + self.ROI_dir)
 
         return self.FS_dir, self.output_dir, self.apertures_dir, self.surface_tools_dir, self.ROI_dir, self.project_config.do_cf_modeling
 
