@@ -332,8 +332,9 @@ class CleanInputData:
         ## Combine apertures (if applicable)
         if self.prf_config.ap_combine == 'concatenate':
             mri_config.prf_run_config = self._combine_apertures_prf()
-        if self.cfm_config.ap_combine == 'concatenate':
-            mri_config.cf_run_config = self._combine_apertures_cfm()
+        if cfm_config is not None:
+            if self.cfm_config.ap_combine == 'concatenate':
+                mri_config.cf_run_config = self._combine_apertures_cfm()
 
     def _make_occipital_mask(self):
         """
